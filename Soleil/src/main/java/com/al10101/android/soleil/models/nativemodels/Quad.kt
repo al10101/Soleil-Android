@@ -1,11 +1,14 @@
-package com.al10101.android.soleil.models
+package com.al10101.android.soleil.models.nativemodels
 
 import com.al10101.android.soleil.data.RGB
 import com.al10101.android.soleil.data.Vector
-import com.al10101.android.soleil.data.VertexArray
+import com.al10101.android.soleil.models.Face
+import com.al10101.android.soleil.models.Mesh
+import com.al10101.android.soleil.models.Model
+import com.al10101.android.soleil.nodes.ChildNode
 import com.al10101.android.soleil.programs.ShaderProgram
 
-class Quad @JvmOverloads constructor(
+open class Quad @JvmOverloads constructor(
     program: ShaderProgram,
     width: Float, height: Float,
     rgb: RGB = RGB.white,
@@ -14,8 +17,9 @@ class Quad @JvmOverloads constructor(
     clipT: Float = 0f,
     position: Vector = Vector.zero,
     rotation: Vector = Vector.zero,
-    scale: Vector = Vector.one
-): Model(name="Quad") {
+    scale: Vector = Vector.one,
+    name: String = "Quad"
+): Model(name) {
 
     init {
 
@@ -31,7 +35,6 @@ class Quad @JvmOverloads constructor(
              wHalf, -hHalf, 0f, rgb.r, rgb.g, rgb.b, alpha, 0f, 0f, 1f, 1f-clipS, 1f-clipT
         )
 
-        val vertexArray = VertexArray(positions)
         val faces = listOf(
             Face(0, 1, 2),
             Face(0, 2, 3)
@@ -39,12 +42,13 @@ class Quad @JvmOverloads constructor(
 
         // Add only 1 mesh to the RootNode
         meshes.add(
-            Mesh(vertexArray, faces)
+            Mesh(positions, faces)
         )
 
         // Also add the program to the model
         programs.add(program)
-        programIdxWithMesh.add(0) // <- The only program is linked to the mesh nr. 0
+        meshIdxWithProgram.add(0) // <- The program nr. 0 is linked to the mesh with index nr. 0
+        // (it is the first element)
 
         // Link the only child to the mesh
         children.add(

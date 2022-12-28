@@ -16,21 +16,41 @@ private const val TOTAL_COMPONENT_COUNT = POSITION_COMPONENT_COUNT +
         TEXTURE_COORDINATES_COMPONENT_COUNT
 private const val STRIDE = TOTAL_COMPONENT_COUNT * BYTES_PER_FLOAT
 
-class Mesh(private val vertexArray: VertexArray, faces: List<Face>) {
+class Mesh constructor(
+    // As default, assume it renders with strip mode
+    vertexData: FloatArray,
+    private val nTotalElements: Int
+) {
 
-    private var nVertices = faces.size * 3
-    private var vertexIndices = IntBuffer.allocate(nVertices)
+    private val vertexArray = VertexArray(vertexData)
+    private var vertexIndices: IntBuffer? = null
+    // The vertex indices is not needed if it renders in strip
+    private var drawFun = { drawStripTriangles() }
 
-    init {
+    // As first secondary constructor, assume it renders with index mode.
+    // This mode is actually more common, but it cannot be used as default
+    // because it is a little more complex
+    constructor(
+        vertexData: FloatArray,
+        faces: List<Face>
+    ): this(vertexData, faces.size * 3) {
+
         var offset = 0
-        val facesIndices = IntArray(nVertices)
+        val facesIndices = IntArray(nTotalElements)
         faces.forEach {
             facesIndices[offset++] = it.a
             facesIndices[offset++] = it.b
             facesIndices[offset++] = it.c
         }
-        vertexIndices.put(facesIndices)
-        vertexIndices.position(0)
+
+        // If the rendering is indexed, we need the indices
+        vertexIndices = IntBuffer.allocate(nTotalElements).apply {
+            put(facesIndices)
+            position(0)
+        }
+
+        drawFun = { drawIndexedTriangles() }
+
     }
 
     fun bindData(program: ShaderProgram) {
@@ -61,12 +81,18 @@ class Mesh(private val vertexArray: VertexArray, faces: List<Face>) {
 
     }
 
-    fun drawIndexedTriangles() {
-        glDrawElements(GL_TRIANGLES, nVertices, GL_UNSIGNED_INT, vertexIndices)
+    fun draw() {
+        drawFun()
     }
 
-    fun drawStripTriangles(totalElements: Int) {
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, totalElements)
+    private fun drawIndexedTriangles() {
+        // nTotalElements here is the number of faces multiplied by 3
+        glDrawElements(GL_TRIANGLES, nTotalElements, GL_UNSIGNED_INT, vertexIndices!!)
+    }
+
+    private fun drawStripTriangles() {
+        // nTotalElements here is the number of fan elements initialized in the constructor
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, nTotalElements)
     }
 
 }

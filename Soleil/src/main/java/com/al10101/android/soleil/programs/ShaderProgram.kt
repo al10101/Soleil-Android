@@ -2,7 +2,7 @@ package com.al10101.android.soleil.programs
 
 import android.content.Context
 import android.opengl.GLES20.*
-import com.al10101.android.soleil.data.Uniforms
+import com.al10101.android.soleil.uniforms.Uniforms
 import com.al10101.android.soleil.extensions.readTextFileFromResource
 import com.al10101.android.soleil.utils.ShaderUtils
 

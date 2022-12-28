@@ -1,6 +1,6 @@
-package com.al10101.android.soleil.data
+package com.al10101.android.soleil.uniforms
 
-import com.al10101.android.soleil.models.LightArray
+import com.al10101.android.soleil.data.Vector
 
 data class Uniforms(
     var modelMatrix: FloatArray,

@@ -1,8 +1,8 @@
 package com.al10101.android.soleil.models
 
-import com.al10101.android.soleil.data.Uniforms
+import com.al10101.android.soleil.uniforms.Uniforms
 
 interface Renderable {
-    var name: String
+    val name: String
     fun onRender(uniforms: Uniforms)
 }

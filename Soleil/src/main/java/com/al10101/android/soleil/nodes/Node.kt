@@ -1,4 +1,4 @@
-package com.al10101.android.soleil.models
+package com.al10101.android.soleil.nodes
 
 open class Node {
 

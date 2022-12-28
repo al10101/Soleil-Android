@@ -1,4 +1,4 @@
-package com.al10101.android.soleil.models
+package com.al10101.android.soleil.nodes
 
 import android.opengl.Matrix
 import com.al10101.android.soleil.data.Vector

@@ -1,23 +1,23 @@
 package com.al10101.android.soleil.models
 
 import android.opengl.Matrix.multiplyMM
-import com.al10101.android.soleil.data.Uniforms
+import com.al10101.android.soleil.nodes.RootNode
+import com.al10101.android.soleil.uniforms.Uniforms
 import com.al10101.android.soleil.programs.ShaderProgram
-import java.lang.IllegalStateException
 
 open class Model(
-    override var name: String
+    override val name: String
 ): RootNode(), Renderable {
 
     var programs: MutableList<ShaderProgram> = mutableListOf()
-    var programIdxWithMesh: MutableList<Int> = mutableListOf()
-    // programIdxWithMesh -> {
-    // index0<Program> works with value0<Mesh>
-    // index1<Program> works with value1<Mesh>
+    var meshIdxWithProgram: MutableList<Int> = mutableListOf()
+    // meshIdxWithProgram -> {
+    // index0<Mesh> works with value0<Program>
+    // index1<Mesh> works with value1<Program>
     // ...
     // }
-    // That is, programs.size and programIdxWithMesh.size must be the same value.
-    // The max number in programIdxWithMesh corresponds to meshes.size-1
+    // That is, meshes.size and meshIdxWithProgram.size must be the same value.
+    // The max value inside meshIdxWithProgram corresponds to programs.size-1
 
     override fun onRender(uniforms: Uniforms) {
 
@@ -32,12 +32,11 @@ open class Model(
             uniforms.modelMatrix = temp
 
             // The number of meshes is equal or greater than the number of programs, since
-            // there cannot be 2 programs linked to the same mesh. So we start by counting the meshes
-            // inside the childNode
+            // there shouldn't be 2 programs linked to the same mesh
             childNode.meshesIndices.forEach { meshIdx ->
-                
-                // We find the meshIdx as a (unique) value inside the list of indexes
-                val programIdx = programIdxWithMesh.indexOf(meshIdx)
+
+                // The meshIdx is the index to identify the program inside the meshIdxWithProgram variable
+                val programIdx = meshIdxWithProgram[meshIdx]
 
                 val program = programs[programIdx]
                 val mesh = meshes[meshIdx]
@@ -45,7 +44,7 @@ open class Model(
                 program.useProgram()
                 program.setUniforms(uniforms)
                 mesh.bindData(program)
-                mesh.drawIndexedTriangles()
+                mesh.draw()
 
             }
 

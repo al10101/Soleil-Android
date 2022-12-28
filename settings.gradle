@@ -8,3 +8,4 @@ dependencyResolutionManagement {
 }
 rootProject.name = "Soleil"
 include ':app'
+include ':Soleil'

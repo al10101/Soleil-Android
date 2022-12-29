@@ -9,6 +9,7 @@ const val OPENGL_ZERO = 0
 const val SHADER_UTILS_TAG = "SoleilShaderUtilsTag"
 const val FRAME_RATE_TAG = "SoleilFrameRateTag"
 const val CONTEXT_EXT_TAG = "SoleilContextExtTag"
+const val MODELS_TAG  = "SoleilModelsTag"
 
 // Counters
 const val BYTES_PER_FLOAT = 4

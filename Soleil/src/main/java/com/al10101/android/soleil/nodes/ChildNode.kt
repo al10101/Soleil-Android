@@ -15,6 +15,7 @@ open class ChildNode(
     var meshesIndices: MutableList<Int> = mutableListOf()
 
     val modelMatrix by lazy {
+
         val translateMatrix = FloatArray(16).apply { translation(position) }
         val rotateMatrix = FloatArray(16).apply { rotation(rotation) }
         val scaleMatrix = FloatArray(16).apply { scaling(scale) }

@@ -80,6 +80,9 @@ class Vector(
     companion object {
         val zero = Vector(0f, 0f, 0f)
         val one = Vector(1f, 1f, 1f)
+        val unitaryX = Vector(1f, 0f, 0f)
+        val unitaryY = Vector(0f, 1f, 0f)
+        val unitaryZ = Vector(0f, 0f, 1f)
         fun random(random: Random) = Vector(
             random.nextFloat(),
             random.nextFloat(),

@@ -7,7 +7,7 @@ import com.al10101.android.soleil.data.Vector
 class Camera @JvmOverloads constructor(
     var position: Vector = Vector(0f, 0f, 5f),
     var center: Vector = Vector.zero,
-    var up: Vector = Vector(0f, 1f, 0f),
+    var up: Vector = Vector.unitaryY,
     var aspect: Float = 1f,
     var fovy: Float = 45f,
     var near: Float = 0.01f,
@@ -16,7 +16,6 @@ class Camera @JvmOverloads constructor(
 
     val viewMatrix = FloatArray(16)
     val projectionMatrix = FloatArray(16)
-    val viewProjectionMatrix = FloatArray(16)
 
     fun setViewMatrix() {
         setLookAtM(
@@ -37,10 +36,6 @@ class Camera @JvmOverloads constructor(
 
     fun setPerspectiveProjectionMatrix() {
         perspectiveM(projectionMatrix, 0, fovy, aspect, near, far)
-    }
-
-    fun setVPMatrix() {
-        multiplyMM(viewProjectionMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
     }
 
 }

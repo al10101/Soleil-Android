@@ -5,23 +5,10 @@ import com.al10101.android.soleil.data.Vector
 import com.al10101.android.soleil.utils.LightTypes
 
 data class Light(
-    var position: Vector,
-    var color: RGB,
-    var specular: RGB,
-    var intensity: Float,
-    var attenuation: Vector,
-    var type: Int
-) {
-
-    companion object {
-        fun buildDefaultLight() = Light(
-            position = Vector.one,
-            color = RGB.white,
-            specular = RGB.grayScale(0.6f),
-            intensity = 1f,
-            attenuation = Vector(1f, 0f, 0f),
-            type = LightTypes.SUNLIGHT
-        )
-    }
-
-}
+    var position: Vector = Vector.one,
+    var color: RGB = RGB.white,
+    var specular: RGB = RGB.grayScale(0.6f),
+    var intensity: Float = 1f,
+    var attenuation: Vector = Vector(1f, 0f, 0f),
+    var type: Int = LightTypes.SUNLIGHT
+)

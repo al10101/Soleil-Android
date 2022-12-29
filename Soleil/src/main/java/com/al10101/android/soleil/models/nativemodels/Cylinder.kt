@@ -35,21 +35,58 @@ open class Cylinder @JvmOverloads constructor(
 
         // Both caps will be drawn with the fan mode, so the stride needs only 1 more value to
         // store the center of the circle
-        val circleStride = slices + 1
+        val capStride = slices + 1
 
         // The order of the coordinates is as follows
         // XYZ RGBA XYZ ST
-        // This means that there are 12 components for each vertex
+        // This means that there are 12 components for each vertex.
+        // The coordinates are made so that the whole cylinder shares the same texture
         val totalComponents = 12
 
         // This model will contain 3 different meshes, so we initialize 3 vertex arrays
         val tubeVertices = FloatArray(totalComponents * tubeStride)
-        val bottomVertices = FloatArray(totalComponents * circleStride)
-        val topVertices = FloatArray(totalComponents * circleStride)
+        val bottomVertices = FloatArray(totalComponents * capStride)
+        val topVertices = FloatArray(totalComponents * capStride)
 
         var tubeOffset = 0
         var bottomOffset = 0
         var topOffset = 0
+
+        // Add the center to the bottom
+        // Position
+        bottomVertices[bottomOffset++] = 0f
+        bottomVertices[bottomOffset++] = 0f
+        bottomVertices[bottomOffset++] = 0f
+        // Color
+        bottomVertices[bottomOffset++] = rgb.r
+        bottomVertices[bottomOffset++] = rgb.g
+        bottomVertices[bottomOffset++] = rgb.b
+        bottomVertices[bottomOffset++] = alpha
+        // Normal
+        bottomVertices[bottomOffset++] = 0f
+        bottomVertices[bottomOffset++] = -1f
+        bottomVertices[bottomOffset++] = 0f
+        // Texture
+        bottomVertices[bottomOffset++] = 0f
+        bottomVertices[bottomOffset++] = 0f
+
+        // Add the center to the top
+        // Position
+        topVertices[topOffset++] = 0f
+        topVertices[topOffset++] = height
+        topVertices[topOffset++] = 0f
+        // Color
+        topVertices[topOffset++] = rgb.r
+        topVertices[topOffset++] = rgb.g
+        topVertices[topOffset++] = rgb.b
+        topVertices[topOffset++] = alpha
+        // Normal
+        topVertices[topOffset++] = 0f
+        topVertices[topOffset++] = 1f
+        topVertices[topOffset++] = 0f
+        // Texture
+        topVertices[topOffset++] = 0f
+        topVertices[topOffset++] = 0f
 
         for (thetaIdx in 0 until slices) {
 
@@ -140,46 +177,10 @@ open class Cylinder @JvmOverloads constructor(
             tubeVertices[tubeOffset++] = tubeVertices[i]
         }
 
-        // Add the center to the bottom
-        // Position
-        bottomVertices[bottomOffset++] = 0f
-        bottomVertices[bottomOffset++] = 0f
-        bottomVertices[bottomOffset++] = 0f
-        // Color
-        bottomVertices[bottomOffset++] = rgb.r
-        bottomVertices[bottomOffset++] = rgb.g
-        bottomVertices[bottomOffset++] = rgb.b
-        bottomVertices[bottomOffset++] = alpha
-        // Normal
-        bottomVertices[bottomOffset++] = 0f
-        bottomVertices[bottomOffset++] = -1f
-        bottomVertices[bottomOffset++] = 0f
-        // Texture
-        bottomVertices[bottomOffset++] = 0f
-        bottomVertices[bottomOffset] = 0f
-
-        // Add the center to the top
-        // Position
-        topVertices[topOffset++] = 0f
-        topVertices[topOffset++] = height
-        topVertices[topOffset++] = 0f
-        // Color
-        topVertices[topOffset++] = rgb.r
-        topVertices[topOffset++] = rgb.g
-        topVertices[topOffset++] = rgb.b
-        topVertices[topOffset++] = alpha
-        // Normal
-        topVertices[topOffset++] = 0f
-        topVertices[topOffset++] = 1f
-        topVertices[topOffset++] = 0f
-        // Texture
-        topVertices[topOffset++] = 0f
-        topVertices[topOffset] = 0f
-
         // No faces are needed
         val tubeMesh = Mesh(tubeVertices, tubeStride)
-        val topMesh = Mesh(topVertices, circleStride, GL_TRIANGLE_FAN)
-        val bottomMesh = Mesh(bottomVertices, circleStride, GL_TRIANGLE_FAN)
+        val topMesh = Mesh(topVertices, capStride, GL_TRIANGLE_FAN)
+        val bottomMesh = Mesh(bottomVertices, capStride, GL_TRIANGLE_FAN)
 
         meshes.add(tubeMesh)
         programs.add(program)

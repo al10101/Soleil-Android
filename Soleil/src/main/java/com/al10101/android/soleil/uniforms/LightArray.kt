@@ -12,11 +12,20 @@ class LightArray(
     val lightTypes: IntArray
 ) {
 
-    fun changePositionAt(i: Int, newPos: Vector) {
+    fun setPositionAt(i: Int, newPos: Vector) {
         val offset = 3 * i
         lightPositions[0 + offset] = newPos.x
         lightPositions[1 + offset] = newPos.y
         lightPositions[2 + offset] = newPos.z
+    }
+
+    fun getPositionAt(i: Int): Vector {
+        val offset = 3 * i
+        return Vector(
+            lightPositions[0 + offset],
+            lightPositions[1 + offset],
+            lightPositions[2 + offset]
+        )
     }
 
     companion object {

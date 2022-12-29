@@ -51,10 +51,11 @@ open class Quad @JvmOverloads constructor(
         // (it is the first element)
 
         // Link the only child to the mesh
+        val childNode = ChildNode(position, rotation, scale).apply {
+            meshesIndices.add(0) // <- This child is linked to the mesh nr. 0
+        }
         children.add(
-            ChildNode(position, rotation, scale).apply {
-                meshesIndices.add(0) // <- This child is linked to the mesh nr. 0
-            }
+            childNode
         )
 
     }

@@ -1,9 +1,11 @@
 package com.al10101.android.soleil.models
 
 import android.opengl.Matrix.multiplyMM
+import android.util.Log
 import com.al10101.android.soleil.nodes.RootNode
 import com.al10101.android.soleil.uniforms.Uniforms
 import com.al10101.android.soleil.programs.ShaderProgram
+import com.al10101.android.soleil.utils.MODELS_TAG
 
 open class Model(
     override val name: String
@@ -29,7 +31,7 @@ open class Model(
 
             // Pass total movement to the modelMatrix from the node
             multiplyMM(temp, 0, globalModelMatrix, 0, childNode.modelMatrix, 0)
-            uniforms.modelMatrix = temp
+            uniforms.modelMatrix = temp.copyOf()
 
             // The number of meshes is equal or greater than the number of programs, since
             // there shouldn't be 2 programs linked to the same mesh

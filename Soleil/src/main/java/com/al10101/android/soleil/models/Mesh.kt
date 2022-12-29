@@ -24,7 +24,7 @@ class Mesh constructor(
 ) {
 
     private val vertexArray = VertexArray(vertexData)
-    // The vertex indices is not needed if it renders in strip
+    // The vertex indices is not needed if it renders in strip or fan
     private var vertexIndices: IntBuffer? = null
     private var drawPrimitives = { drawContinuousArray() }
 

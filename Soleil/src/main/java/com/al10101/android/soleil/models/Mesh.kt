@@ -17,23 +17,24 @@ private const val TOTAL_COMPONENT_COUNT = POSITION_COMPONENT_COUNT +
 private const val STRIDE = TOTAL_COMPONENT_COUNT * BYTES_PER_FLOAT
 
 class Mesh constructor(
-    // As default, assume it renders with strip mode
     vertexData: FloatArray,
-    private val nTotalElements: Int
+    private val nTotalElements: Int,
+    // As default, assume it renders with strip mode
+    private val glPrimitivesMode: Int = GL_TRIANGLE_STRIP
 ) {
 
     private val vertexArray = VertexArray(vertexData)
-    private var vertexIndices: IntBuffer? = null
     // The vertex indices is not needed if it renders in strip
-    private var drawFun = { drawStripTriangles() }
+    private var vertexIndices: IntBuffer? = null
+    private var drawPrimitives = { drawContinuousArray() }
 
     // As first secondary constructor, assume it renders with index mode.
     // This mode is actually more common, but it cannot be used as default
-    // because it is a little more complex
+    // because it is a little bit more complex
     constructor(
         vertexData: FloatArray,
-        faces: List<Face>
-    ): this(vertexData, faces.size * 3) {
+        faces: List<Face>,
+    ): this(vertexData, faces.size * 3, GL_TRIANGLES) {
 
         var offset = 0
         val facesIndices = IntArray(nTotalElements)
@@ -49,7 +50,7 @@ class Mesh constructor(
             position(0)
         }
 
-        drawFun = { drawIndexedTriangles() }
+        drawPrimitives = { drawIndexedElements() }
 
     }
 
@@ -82,17 +83,17 @@ class Mesh constructor(
     }
 
     fun draw() {
-        drawFun()
+        drawPrimitives()
     }
 
-    private fun drawIndexedTriangles() {
+    private fun drawIndexedElements() {
         // nTotalElements here is the number of faces multiplied by 3
-        glDrawElements(GL_TRIANGLES, nTotalElements, GL_UNSIGNED_INT, vertexIndices!!)
+        glDrawElements(glPrimitivesMode, nTotalElements, GL_UNSIGNED_INT, vertexIndices!!)
     }
 
-    private fun drawStripTriangles() {
+    private fun drawContinuousArray() {
         // nTotalElements here is the number of fan elements initialized in the constructor
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, nTotalElements)
+        glDrawArrays(glPrimitivesMode, 0, nTotalElements)
     }
 
 }

@@ -14,7 +14,8 @@ import kotlin.math.sin
 open class Cylinder @JvmOverloads constructor(
     program: ShaderProgram,
     height: Float, slices: Int, radius: Float,
-    bottomCap: Boolean, topCap: Boolean,
+    bottomCap: Boolean = true,
+    topCap: Boolean = true,
     rgb: RGB = RGB.white,
     alpha: Float = 1f,
     position: Vector = Vector.zero,
@@ -43,6 +44,10 @@ open class Cylinder @JvmOverloads constructor(
         // The coordinates are made so that the whole cylinder shares the same texture
         val totalComponents = 12
 
+        // Because of z-fighting, the caps will look weird if they're perfectly close. There must
+        // be a little bit of extra border in them
+        val extraBorder = 1.005f
+
         // This model will contain 3 different meshes, so we initialize 3 vertex arrays
         val tubeVertices = FloatArray(totalComponents * tubeStride)
         val bottomVertices = FloatArray(totalComponents * capStride)
@@ -67,8 +72,8 @@ open class Cylinder @JvmOverloads constructor(
         bottomVertices[bottomOffset++] = -1f
         bottomVertices[bottomOffset++] = 0f
         // Texture
-        bottomVertices[bottomOffset++] = 0f
-        bottomVertices[bottomOffset++] = 0f
+        bottomVertices[bottomOffset++] = 0.5f
+        bottomVertices[bottomOffset++] = 0.5f
 
         // Add the center to the top
         // Position
@@ -85,8 +90,8 @@ open class Cylinder @JvmOverloads constructor(
         topVertices[topOffset++] = 1f
         topVertices[topOffset++] = 0f
         // Texture
-        topVertices[topOffset++] = 0f
-        topVertices[topOffset++] = 0f
+        topVertices[topOffset++] = 0.5f
+        topVertices[topOffset++] = 0.5f
 
         for (thetaIdx in 0 until slices) {
 
@@ -136,9 +141,9 @@ open class Cylinder @JvmOverloads constructor(
 
             // BottomCap
             // Position
-            bottomVertices[bottomOffset++] = x
+            bottomVertices[bottomOffset++] = extraBorder * x
             bottomVertices[bottomOffset++] = 0f
-            bottomVertices[bottomOffset++] = z
+            bottomVertices[bottomOffset++] = extraBorder * z
             // Color
             bottomVertices[bottomOffset++] = rgb.r
             bottomVertices[bottomOffset++] = rgb.g
@@ -149,14 +154,14 @@ open class Cylinder @JvmOverloads constructor(
             bottomVertices[bottomOffset++] = -1f
             bottomVertices[bottomOffset++] = 0f
             // Texture
-            bottomVertices[bottomOffset++] = texX
-            bottomVertices[bottomOffset++] = 1f
+            bottomVertices[bottomOffset++] = 0.5f + cosTheta * 0.5f
+            bottomVertices[bottomOffset++] = 0.5f - sinTheta * 0.5f
 
             // TopCap
             // Position
-            topVertices[topOffset++] = x
+            topVertices[topOffset++] = extraBorder * z
             topVertices[topOffset++] = height
-            topVertices[topOffset++] = z
+            topVertices[topOffset++] = extraBorder * x
             // Color
             topVertices[topOffset++] = rgb.r
             topVertices[topOffset++] = rgb.g
@@ -167,8 +172,8 @@ open class Cylinder @JvmOverloads constructor(
             topVertices[topOffset++] = 1f
             topVertices[topOffset++] = 0f
             // Texture
-            topVertices[topOffset++] = texX
-            topVertices[topOffset++] = 0f
+            topVertices[topOffset++] = 0.5f + cosTheta * 0.5f
+            topVertices[topOffset++] = 0.5f - sinTheta * 0.5f
 
         }
 

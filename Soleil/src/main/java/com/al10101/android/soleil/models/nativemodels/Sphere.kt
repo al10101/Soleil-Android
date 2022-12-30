@@ -75,7 +75,7 @@ open class Sphere @JvmOverloads constructor(
                 vertices[offset++] = cosPhi0 * sinTheta
                 // Texture
                 vertices[offset++] = texX
-                vertices[offset++] = (phiIdx+0).toFloat() * stacksM1
+                vertices[offset++] = 1f - (phiIdx+0).toFloat() * stacksM1
 
                 // Second triangle
                 // Position
@@ -93,7 +93,7 @@ open class Sphere @JvmOverloads constructor(
                 vertices[offset++] = cosPhi1 * sinTheta
                 // Texture
                 vertices[offset++] = texX
-                vertices[offset++] = (phiIdx+1).toFloat() * stacksM1
+                vertices[offset++] = 1f - (phiIdx+1).toFloat() * stacksM1
 
             }
 

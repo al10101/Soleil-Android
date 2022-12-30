@@ -14,7 +14,7 @@ class MainActivity: AppCompatActivity() {
 
         glView = GLSurfaceView(this)
         glView.setEGLContextClientVersion(2)
-        glView.setRenderer(BoxesRenderer(this))
+        glView.setRenderer(FiguresRenderer(this))
         rendererSet = true
 
         setContentView(glView)

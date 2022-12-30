@@ -5,13 +5,13 @@ import android.opengl.GLES20.*
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix.rotateM
 import android.opengl.Matrix.setIdentityM
-import android.util.Log
 import com.al10101.android.soleil.data.RGB
 import com.al10101.android.soleil.data.Vector
+import com.al10101.android.soleil.extensions.loadTexture
 import com.al10101.android.soleil.models.Model
-import com.al10101.android.soleil.models.nativemodels.Box
-import com.al10101.android.soleil.models.nativemodels.Quad
+import com.al10101.android.soleil.models.nativemodels.*
 import com.al10101.android.soleil.programs.SimpleLightShaderProgram
+import com.al10101.android.soleil.programs.SimpleTextureShaderProgram
 import com.al10101.android.soleil.uniforms.Camera
 import com.al10101.android.soleil.uniforms.Light
 import com.al10101.android.soleil.uniforms.LightArray
@@ -23,7 +23,7 @@ import javax.microedition.khronos.opengles.GL10
 
 private const val TAG = "BoxesRenderer"
 
-class BoxesRenderer(private val context: Context): GLSurfaceView.Renderer {
+class FiguresRenderer(private val context: Context): GLSurfaceView.Renderer {
 
     private lateinit var models: List<Model>
     private lateinit var uniforms: Uniforms
@@ -33,8 +33,8 @@ class BoxesRenderer(private val context: Context): GLSurfaceView.Renderer {
     override fun onSurfaceCreated(p0: GL10?, p1: EGLConfig?) {
 
         // "De-select" faces that are aimed away from us
-        //glEnable(GL_CULL_FACE)
-        //glCullFace(GL_FRONT)
+        glEnable(GL_CULL_FACE)
+        glCullFace(GL_FRONT)
 
         // z-buffering
         glEnable(GL_DEPTH_TEST)
@@ -44,27 +44,37 @@ class BoxesRenderer(private val context: Context): GLSurfaceView.Renderer {
         glClearColor(bgColor.r, bgColor.g, bgColor.b, 1f)
 
         // Define program
-        val program = SimpleLightShaderProgram(context)
+        val lightProgram = SimpleLightShaderProgram(context)
+        val textProgram = SimpleTextureShaderProgram(context)
 
         // Set the models right away
-        val redBox = Box(program, 1f, 1f, 1f, RGB.red)
-        val greenBox = Box(program, 1.5f, 1.5f, 1.5f, RGB.green,
-            position = Vector(3f, 1f, 1f),
-            rotation = Vector(30f, 75f, 84f)
+        val redCylinder = Cylinder(lightProgram, 2f, 40, 1f,
+            bottomCap = true,
+            topCap = true,
+            rgb = RGB.red,
+            position = Vector(0f, 0f, 1f)
         )
-        val blueBox = Box(program, 3f, 3f, 3f, RGB.blue,
-            position = Vector(-2f, 3f, -3f),
-            rotation = Vector(60f, 32f, 112f)
+        val greenSphere = Sphere(textProgram, 40, 40, 1.5f, RGB.green,
+            position = Vector(1.8f, 1.5f, -1.5f)
         )
-        val ground = Quad(program, 20f, 20f, RGB.white,
-            position = Vector(0f, -0.5f, 0f),
+        val blueBox = Box(lightProgram, 3f, 1f, 3f, RGB.blue,
+            position = Vector(-2.4f, 0.5f, -2f),
+            rotation = Vector(0f, 32f, 0f)
+        )
+        val yellowCone = Cone(lightProgram, 3f, 40, 1.5f,
+            cap = true,
+            rgb = RGB(1f, 1f, 0f),
+            position = Vector(2f, 0f, 3f)
+        )
+        val ground = Quad(lightProgram, 20f, 20f, RGB.white,
             rotation = Vector(-90f, 0f, 0f)
         )
 
         models = listOf(
-            redBox,
-            greenBox,
+            redCylinder,
+            greenSphere,
             blueBox,
+            yellowCone,
             ground,
         )
 
@@ -96,7 +106,7 @@ class BoxesRenderer(private val context: Context): GLSurfaceView.Renderer {
             camera.projectionMatrix,
             camera.position,
             lightArray,
-            null // No textures this time
+            intArrayOf(context.loadTexture(R.drawable.old_obunga))
         )
 
         globalStartTime = System.nanoTime()

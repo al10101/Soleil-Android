@@ -119,7 +119,7 @@ open class Cylinder @JvmOverloads constructor(
             tubeVertices[tubeOffset++] = sinTheta
             // Texture
             tubeVertices[tubeOffset++] = texX
-            tubeVertices[tubeOffset++] = 1f
+            tubeVertices[tubeOffset++] = 0f
 
             // Second triangle of the tube, initialized at the top
             // Position
@@ -137,7 +137,7 @@ open class Cylinder @JvmOverloads constructor(
             tubeVertices[tubeOffset++] = z
             // Texture
             tubeVertices[tubeOffset++] = texX
-            tubeVertices[tubeOffset++] = 0f
+            tubeVertices[tubeOffset++] = 1f
 
             // BottomCap
             // Position
@@ -155,7 +155,7 @@ open class Cylinder @JvmOverloads constructor(
             bottomVertices[bottomOffset++] = 0f
             // Texture
             bottomVertices[bottomOffset++] = 0.5f + cosTheta * 0.5f
-            bottomVertices[bottomOffset++] = 0.5f - sinTheta * 0.5f
+            bottomVertices[bottomOffset++] = 0.5f + sinTheta * 0.5f
 
             // TopCap
             // Position
@@ -173,7 +173,7 @@ open class Cylinder @JvmOverloads constructor(
             topVertices[topOffset++] = 0f
             // Texture
             topVertices[topOffset++] = 0.5f + cosTheta * 0.5f
-            topVertices[topOffset++] = 0.5f - sinTheta * 0.5f
+            topVertices[topOffset++] = 0.5f + sinTheta * 0.5f
 
         }
 

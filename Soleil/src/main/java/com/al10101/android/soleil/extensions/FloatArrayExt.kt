@@ -61,19 +61,23 @@ fun FloatArray.toVector() = Vector(
     this[2]
 )
 
-fun FloatArray.translation(translate: Vector) {
+fun FloatArray.identity() {
     setIdentityM(this, 0)
+}
+
+fun FloatArray.translation(translate: Vector) {
+    identity()
     translateM(this, 0, translate.x, translate.y, translate.z)
 }
 
 fun FloatArray.rotation(rotate: Vector) {
-    setIdentityM(this, 0)
+    identity()
     rotateM(this, 0, rotate.x, 1f, 0f, 0f)
     rotateM(this, 0, rotate.y, 0f, 1f, 0f)
     rotateM(this, 0, rotate.z, 0f, 0f, 1f)
 }
 
 fun FloatArray.scaling(scale: Vector) {
-    setIdentityM(this, 0)
+    identity()
     scaleM(this, 0, scale.x, scale.y, scale.z)
 }

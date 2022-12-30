@@ -114,7 +114,7 @@ open class Cone @JvmOverloads constructor(
             coneVertices[coneOffset++] = -coneY * sinTheta
             // Texture
             coneVertices[coneOffset++] = texX
-            coneVertices[coneOffset++] = 1f
+            coneVertices[coneOffset++] = 0f
 
             // Top coordinates of the cone
             // Position
@@ -132,7 +132,7 @@ open class Cone @JvmOverloads constructor(
             coneVertices[coneOffset++] = -coneY * sinTheta
             // Texture
             coneVertices[coneOffset++] = 0.5f
-            coneVertices[coneOffset++] = 0f
+            coneVertices[coneOffset++] = 1f
 
             // Add the faces. If it is the last slice, close the triangle with the first index
             val nextFaceIdx = if (thetaIdx == slices-1) { 0 } else { faceOffset + 2 }
@@ -156,7 +156,7 @@ open class Cone @JvmOverloads constructor(
             capVertices[capOffset++] = 0f
             // Texture
             capVertices[capOffset++] = 0.5f + cosTheta * 0.5f
-            capVertices[capOffset++] = 0.5f - sinTheta * 0.5f
+            capVertices[capOffset++] = 0.5f + sinTheta * 0.5f
 
         }
 

@@ -1,6 +1,8 @@
 package com.al10101.android.soleil.uniforms
 
 import com.al10101.android.soleil.data.Vector
+import com.al10101.android.soleil.extensions.identity
+import com.al10101.android.soleil.extensions.translation
 
 data class Uniforms(
     var modelMatrix: FloatArray,
@@ -30,6 +32,22 @@ data class Uniforms(
         result = 31 * result + projectionMatrix.contentHashCode()
         result = 31 * result + textureIds.contentHashCode()
         return result
+    }
+
+    companion object {
+
+        fun normalizedDeviceCoordinates(): Uniforms {
+            val identity = FloatArray(16).apply { identity() }
+            return Uniforms(
+                identity,
+                identity,
+                identity,
+                Vector.zero,
+                null,
+                null
+            )
+        }
+
     }
 
 }

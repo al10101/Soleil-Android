@@ -29,10 +29,10 @@ open class Quad @JvmOverloads constructor(
         // Since it will be drawn in the fan mode, we add positions and fan. The figure is centered
         // at the origin and pointing towards the viewer. Order of coordinates: XYZ RGBA XYZ ST
         val positions = floatArrayOf(
-            -wHalf, -hHalf, 0f, rgb.r, rgb.g, rgb.b, alpha, 0f, 0f, 1f, 0f+clipS, 1f-clipT,
-            -wHalf,  hHalf, 0f, rgb.r, rgb.g, rgb.b, alpha, 0f, 0f, 1f, 0f+clipS, 0f+clipT,
-             wHalf,  hHalf, 0f, rgb.r, rgb.g, rgb.b, alpha, 0f, 0f, 1f, 1f-clipS, 0f+clipT,
-             wHalf, -hHalf, 0f, rgb.r, rgb.g, rgb.b, alpha, 0f, 0f, 1f, 1f-clipS, 1f-clipT
+            -wHalf, -hHalf, 0f, rgb.r, rgb.g, rgb.b, alpha, 0f, 0f, 1f, 0f+clipS, 0f-clipT,
+            -wHalf,  hHalf, 0f, rgb.r, rgb.g, rgb.b, alpha, 0f, 0f, 1f, 0f+clipS, 1f+clipT,
+             wHalf,  hHalf, 0f, rgb.r, rgb.g, rgb.b, alpha, 0f, 0f, 1f, 1f-clipS, 1f+clipT,
+             wHalf, -hHalf, 0f, rgb.r, rgb.g, rgb.b, alpha, 0f, 0f, 1f, 1f-clipS, 0f-clipT
         )
 
         val faces = listOf(
@@ -57,6 +57,10 @@ open class Quad @JvmOverloads constructor(
         children.add(
             childNode
         )
+
+    }
+
+    fun invertTextureCoordinates() {
 
     }
 

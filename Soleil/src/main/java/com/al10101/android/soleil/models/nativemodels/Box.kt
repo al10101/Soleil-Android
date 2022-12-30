@@ -35,45 +35,45 @@ open class Box @JvmOverloads constructor(
 
         // Left -> always -x, the fan is in the YZ plane
         val leftFan = floatArrayOf(
-            -x, -y, -z, rgb.r, rgb.g, rgb.b, alpha, -1f,  0f,  0f, 0.00f, 0.66f,
-            -x,  y, -z, rgb.r, rgb.g, rgb.b, alpha, -1f,  0f,  0f, 0.00f, 0.33f,
-            -x,  y,  z, rgb.r, rgb.g, rgb.b, alpha, -1f,  0f,  0f, 0.25f, 0.33f,
-            -x, -y,  z, rgb.r, rgb.g, rgb.b, alpha, -1f,  0f,  0f, 0.25f, 0.66f
+            -x, -y, -z, rgb.r, rgb.g, rgb.b, alpha, -1f,  0f,  0f, 0.00f, 0.33f,
+            -x,  y, -z, rgb.r, rgb.g, rgb.b, alpha, -1f,  0f,  0f, 0.00f, 0.66f,
+            -x,  y,  z, rgb.r, rgb.g, rgb.b, alpha, -1f,  0f,  0f, 0.25f, 0.66f,
+            -x, -y,  z, rgb.r, rgb.g, rgb.b, alpha, -1f,  0f,  0f, 0.25f, 0.33f
         )
         // Right -> always +x, the fan is in the inverted YZ plane
         val rightFan = floatArrayOf(
-             x, -y,  z, rgb.r, rgb.g, rgb.b, alpha,  1f,  0f,  0f, 0.50f, 0.66f,
-             x,  y,  z, rgb.r, rgb.g, rgb.b, alpha,  1f,  0f,  0f, 0.50f, 0.33f,
-             x,  y, -z, rgb.r, rgb.g, rgb.b, alpha,  1f,  0f,  0f, 0.75f, 0.33f,
-             x, -y, -z, rgb.r, rgb.g, rgb.b, alpha,  1f,  0f,  0f, 0.75f, 0.66f
+             x, -y,  z, rgb.r, rgb.g, rgb.b, alpha,  1f,  0f,  0f, 0.50f, 0.33f,
+             x,  y,  z, rgb.r, rgb.g, rgb.b, alpha,  1f,  0f,  0f, 0.50f, 0.66f,
+             x,  y, -z, rgb.r, rgb.g, rgb.b, alpha,  1f,  0f,  0f, 0.75f, 0.66f,
+             x, -y, -z, rgb.r, rgb.g, rgb.b, alpha,  1f,  0f,  0f, 0.75f, 0.33f
         )
         // Front -> always +z, the fan is in the XY plane
         val frontFan = floatArrayOf(
-            -x, -y,  z, rgb.r, rgb.g, rgb.b, alpha,  0f,  0f,  1f, 0.25f, 0.66f,
-            -x,  y,  z, rgb.r, rgb.g, rgb.b, alpha,  0f,  0f,  1f, 0.25f, 0.33f,
-             x,  y,  z, rgb.r, rgb.g, rgb.b, alpha,  0f,  0f,  1f, 0.50f, 0.33f,
-             x, -y,  z, rgb.r, rgb.g, rgb.b, alpha,  0f,  0f,  1f, 0.50f, 0.66f
+            -x, -y,  z, rgb.r, rgb.g, rgb.b, alpha,  0f,  0f,  1f, 0.25f, 0.33f,
+            -x,  y,  z, rgb.r, rgb.g, rgb.b, alpha,  0f,  0f,  1f, 0.25f, 0.66f,
+             x,  y,  z, rgb.r, rgb.g, rgb.b, alpha,  0f,  0f,  1f, 0.50f, 0.66f,
+             x, -y,  z, rgb.r, rgb.g, rgb.b, alpha,  0f,  0f,  1f, 0.50f, 0.33f
         )
         // Back -> always -z, the fan in in the inverted XY plane
         val backFan = floatArrayOf(
-             x, -y, -z, rgb.r, rgb.g, rgb.b, alpha,  0f,  0f, -1f, 0.75f, 0.66f,
-             x,  y, -z, rgb.r, rgb.g, rgb.b, alpha,  0f,  0f, -1f, 0.75f, 0.33f,
-            -x,  y, -z, rgb.r, rgb.g, rgb.b, alpha,  0f,  0f, -1f, 1.00f, 0.33f,
-            -x, -y, -z, rgb.r, rgb.g, rgb.b, alpha,  0f,  0f, -1f, 1.00f, 0.66f
+             x, -y, -z, rgb.r, rgb.g, rgb.b, alpha,  0f,  0f, -1f, 0.75f, 0.33f,
+             x,  y, -z, rgb.r, rgb.g, rgb.b, alpha,  0f,  0f, -1f, 0.75f, 0.66f,
+            -x,  y, -z, rgb.r, rgb.g, rgb.b, alpha,  0f,  0f, -1f, 1.00f, 0.66f,
+            -x, -y, -z, rgb.r, rgb.g, rgb.b, alpha,  0f,  0f, -1f, 1.00f, 0.33f
         )
         // Top -> always +y, the fan is in XZ plane
         val topFan = floatArrayOf(
-            -x,  y,  z, rgb.r, rgb.g, rgb.b, alpha,  0f,  1f,  0f, 0.25f, 0.33f,
-            -x,  y, -z, rgb.r, rgb.g, rgb.b, alpha,  0f,  1f,  0f, 0.25f, 0.00f,
-             x,  y, -z, rgb.r, rgb.g, rgb.b, alpha,  0f,  1f,  0f, 0.50f, 0.00f,
-             x,  y,  z, rgb.r, rgb.g, rgb.b, alpha,  0f,  1f,  0f, 0.50f, 0.33f
+            -x,  y,  z, rgb.r, rgb.g, rgb.b, alpha,  0f,  1f,  0f, 0.25f, 0.66f,
+            -x,  y, -z, rgb.r, rgb.g, rgb.b, alpha,  0f,  1f,  0f, 0.25f, 1.00f,
+             x,  y, -z, rgb.r, rgb.g, rgb.b, alpha,  0f,  1f,  0f, 0.50f, 1.00f,
+             x,  y,  z, rgb.r, rgb.g, rgb.b, alpha,  0f,  1f,  0f, 0.50f, 0.66f
         )
         // Bottom -> always -y, the fan is in inverted XZ plane
         val bottomFan = floatArrayOf(
-            -x, -y, -z, rgb.r, rgb.g, rgb.b, alpha,  0f, -1f,  0f, 0.25f, 1.00f,
-            -x, -y,  z, rgb.r, rgb.g, rgb.b, alpha,  0f, -1f,  0f, 0.25f, 0.66f,
-             x, -y,  z, rgb.r, rgb.g, rgb.b, alpha,  0f, -1f,  0f, 0.50f, 0.66f,
-             x, -y, -z, rgb.r, rgb.g, rgb.b, alpha,  0f, -1f,  0f, 0.50f, 1.00f
+            -x, -y, -z, rgb.r, rgb.g, rgb.b, alpha,  0f, -1f,  0f, 0.25f, 0.00f,
+            -x, -y,  z, rgb.r, rgb.g, rgb.b, alpha,  0f, -1f,  0f, 0.25f, 0.33f,
+             x, -y,  z, rgb.r, rgb.g, rgb.b, alpha,  0f, -1f,  0f, 0.50f, 0.33f,
+             x, -y, -z, rgb.r, rgb.g, rgb.b, alpha,  0f, -1f,  0f, 0.50f, 0.00f
         )
 
         // Since all coordinates are designed the same, all faces share the same fan order

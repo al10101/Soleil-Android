@@ -10,6 +10,7 @@ import com.al10101.android.soleil.extensions.rotation
 import com.al10101.android.soleil.framebuffers.FrameBufferTexture
 import com.al10101.android.soleil.models.Model
 import com.al10101.android.soleil.models.nativemodels.*
+import com.al10101.android.soleil.programs.ShaderProgram
 import com.al10101.android.soleil.programs.SimpleLightShaderProgram
 import com.al10101.android.soleil.programs.SimpleTextureShaderProgram
 import com.al10101.android.soleil.uniforms.Camera
@@ -50,20 +51,20 @@ class FiguresRenderer(private val context: Context): GLSurfaceView.Renderer {
         val textProgram = SimpleTextureShaderProgram(context)
 
         // Set the models right away
-        val redCylinder = Cylinder(textProgram, 2f, 40, 1f, rgb = RGB.red,
+        val redCylinder = Cylinder(lightProgram, 2f, 40, 1f, rgb = RGB.red,
             position = Vector(0f, 0f, 1f)
         )
-        val greenSphere = Sphere(textProgram, 40, 40, 1.5f, RGB.green,
+        val greenSphere = Sphere(lightProgram, 40, 40, 1.5f, RGB.green,
             position = Vector(1.8f, 1.5f, -1.5f)
         )
-        val blueBox = Box(textProgram, 3f, 1f, 3f, RGB.blue,
+        val blueBox = Box(lightProgram, 3f, 1f, 3f, RGB.blue,
             position = Vector(-2.4f, 0.5f, -2f),
             rotation = Vector(0f, 32f, 0f)
         )
-        val yellowCone = Cone(textProgram, 3f, 40, 1.5f, rgb = RGB(1f, 1f, 0f),
+        val yellowCone = Cone(lightProgram, 3f, 40, 1.5f, rgb = RGB(1f, 1f, 0f),
             position = Vector(2f, 0f, 3f)
         )
-        val ground = Quad(textProgram, 20f, 20f, RGB.white,
+        val ground = Quad(lightProgram, 20f, 20f, RGB.white,
             rotation = Vector(-90f, 0f, 0f)
         )
 
@@ -107,8 +108,8 @@ class FiguresRenderer(private val context: Context): GLSurfaceView.Renderer {
             intArrayOf(context.loadTexture(R.drawable.old_obunga))
         )
 
-        val frameBufferProgram = SimpleTextureShaderProgram(context)
-        frameBufferTexture = FrameBufferTexture(frameBufferProgram, width, height)
+        frameBufferTexture = FrameBufferTexture(context,
+            R.raw.post_grayscale, width, height)
 
         globalStartTime = System.nanoTime()
 
@@ -120,26 +121,9 @@ class FiguresRenderer(private val context: Context): GLSurfaceView.Renderer {
         // Move the whole scene
         val currentTime = (System.nanoTime() - globalStartTime) / NANOSECONDS
         val rotation = Vector(0f, currentTime * 15f, 0f)
+        uniforms.modelMatrix.rotation(rotation)
 
-        frameBufferTexture.useFBO()
-
-        renderRotationScene(rotation)
-
-        frameBufferTexture.renderQuad()
-
-    }
-
-    private fun renderRotationScene(rotation: Vector) {
-
-        models.forEach {
-
-            // Since the modelMatrix change inside the onRender() method, we
-            // need to reset it before calling it for every model
-            uniforms.modelMatrix.rotation(rotation)
-
-            it.onRender(uniforms)
-
-        }
+        frameBufferTexture.onRender(models, uniforms)
 
     }
 

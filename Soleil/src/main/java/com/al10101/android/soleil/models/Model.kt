@@ -31,7 +31,7 @@ open class Model(
 
             // Pass total movement to the modelMatrix from the node
             multiplyMM(temp, 0, globalModelMatrix, 0, childNode.modelMatrix, 0)
-            uniforms.modelMatrix = temp.copyOf()
+            uniforms.modelMatrix = temp
 
             // The number of meshes is equal or greater than the number of programs, since
             // there shouldn't be 2 programs linked to the same mesh
@@ -51,6 +51,9 @@ open class Model(
             }
 
         }
+
+        // Reset to original value for next model
+        uniforms.modelMatrix = globalModelMatrix
 
     }
 

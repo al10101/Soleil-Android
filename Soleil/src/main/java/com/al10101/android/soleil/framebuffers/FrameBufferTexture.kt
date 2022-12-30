@@ -1,30 +1,30 @@
 package com.al10101.android.soleil.framebuffers
 
+import android.content.Context
 import android.opengl.GLES20.*
 import android.util.Log
-import com.al10101.android.soleil.data.Vector
-import com.al10101.android.soleil.extensions.rotation
+import com.al10101.android.soleil.models.Model
 import com.al10101.android.soleil.models.nativemodels.Quad
-import com.al10101.android.soleil.programs.ShaderProgram
 import com.al10101.android.soleil.uniforms.Uniforms
 import com.al10101.android.soleil.utils.FRAME_BUFFERS_TAG
 
 class FrameBufferTexture(
-    program: ShaderProgram,
+    context: Context,
+    fragmentShaderResId: Int,
     width: Int,
-    height: Int
-): FrameBuffer(program, width, height) {
+    height: Int,
+): FrameBufferObject(context, fragmentShaderResId, width, height) {
 
-    private val ndcQuad: Quad = Quad(program, 2f, 2f,)
+    private val ndcQuad: Quad = Quad(frameBufferProgram, 2f, 2f,)
     private val ndcUniforms: Uniforms = Uniforms.normalizedDeviceCoordinates().apply {
         textureIds = IntArray(1) // We will use 1 texture
     }
 
     init {
-        generateFBO()
+        onGenerate()
     }
 
-    override fun generateFBO() {
+    override fun onGenerate() {
 
         // Configure depth map fbo
         glGenFramebuffers(1, fbo, 0)
@@ -60,7 +60,7 @@ class FrameBufferTexture(
 
     }
 
-    override fun useFBO() {
+    override fun onRender(models: List<Model>, uniforms: Uniforms) {
 
         // Bind so the next gl calls write into this buffer
         glViewport(0, 0, width, height)
@@ -68,9 +68,10 @@ class FrameBufferTexture(
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
         glEnable(GL_DEPTH_TEST)
 
-    }
-
-    fun renderQuad() {
+        // Render all models
+        models.forEach {
+            it.onRender(uniforms)
+        }
 
         // Since the rendering has been completed by now, we bind the texture to the uniforms
         ndcUniforms.textureIds!![0] = texture[0]

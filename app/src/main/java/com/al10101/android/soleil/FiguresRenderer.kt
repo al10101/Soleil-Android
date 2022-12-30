@@ -7,7 +7,8 @@ import com.al10101.android.soleil.data.RGB
 import com.al10101.android.soleil.data.Vector
 import com.al10101.android.soleil.extensions.loadTexture
 import com.al10101.android.soleil.extensions.rotation
-import com.al10101.android.soleil.framebuffers.FrameBufferTexture
+import com.al10101.android.soleil.framebuffers.PostProcessingFB
+import com.al10101.android.soleil.framebuffers.ShadowMapFB
 import com.al10101.android.soleil.models.Model
 import com.al10101.android.soleil.models.nativemodels.*
 import com.al10101.android.soleil.programs.ShaderProgram
@@ -29,11 +30,15 @@ class FiguresRenderer(private val context: Context): GLSurfaceView.Renderer {
     private lateinit var models: List<Model>
     private lateinit var uniforms: Uniforms
 
-    private lateinit var frameBufferTexture: FrameBufferTexture
+    private lateinit var postProcessingFB: PostProcessingFB
+    private lateinit var shadowMapFB: ShadowMapFB
 
     private var globalStartTime: Long = 0
 
     override fun onSurfaceCreated(p0: GL10?, p1: EGLConfig?) {
+
+        // Turning off any dithering
+        glDisable(GL_DITHER)
 
         // "De-select" faces that are aimed away from us
         glEnable(GL_CULL_FACE)
@@ -94,7 +99,7 @@ class FiguresRenderer(private val context: Context): GLSurfaceView.Renderer {
             setPerspectiveProjectionMatrix()
         }
 
-        val sunlight = Light(position=Vector(10f, 20f, 20f))
+        val sunlight = Light(position=Vector(10f, 5f, 10f))
         val lightArray = LightArray.unrollLights(
             listOf(sunlight)
         )
@@ -105,11 +110,14 @@ class FiguresRenderer(private val context: Context): GLSurfaceView.Renderer {
             camera.projectionMatrix,
             camera.position,
             lightArray,
-            intArrayOf(context.loadTexture(R.drawable.old_obunga))
+            IntArray(1) //intArrayOf(context.loadTexture(R.drawable.old_obunga))
         )
 
-        frameBufferTexture = FrameBufferTexture(context,
-            R.raw.post_grayscale, width, height)
+        shadowMapFB = ShadowMapFB(context, width*2, height*2, width, height, sunlight)
+        postProcessingFB = PostProcessingFB(
+            ShaderProgram(context, R.raw.simple_texture_vs, R.raw.simple_texture_fs),
+            width, height
+        )
 
         globalStartTime = System.nanoTime()
 
@@ -123,7 +131,11 @@ class FiguresRenderer(private val context: Context): GLSurfaceView.Renderer {
         val rotation = Vector(0f, currentTime * 15f, 0f)
         uniforms.modelMatrix.rotation(rotation)
 
-        frameBufferTexture.onRender(models, uniforms)
+        // Render the depth of the scene to get the shadow texture
+        uniforms = shadowMapFB.onRender(models, uniforms)
+
+        // With the uniforms ready, render the scene normally. Put everything in the postprocessing
+        postProcessingFB.onRender(models, uniforms)
 
     }
 

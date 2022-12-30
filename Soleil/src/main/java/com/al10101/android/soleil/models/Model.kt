@@ -13,6 +13,7 @@ open class Model(
 
     var programs: MutableList<ShaderProgram> = mutableListOf()
     var meshIdxWithProgram: MutableList<Int> = mutableListOf()
+
     // meshIdxWithProgram -> {
     // index0<Mesh> works with value0<Program>
     // index1<Mesh> works with value1<Program>
@@ -41,6 +42,38 @@ open class Model(
                 val programIdx = meshIdxWithProgram[meshIdx]
 
                 val program = programs[programIdx]
+                val mesh = meshes[meshIdx]
+
+                program.useProgram()
+                program.setUniforms(uniforms)
+                mesh.bindData(program)
+                mesh.draw()
+
+            }
+
+        }
+
+        // Reset to original value for next model
+        uniforms.modelMatrix = globalModelMatrix
+
+    }
+
+    override fun onRenderWithProgram(program: ShaderProgram, uniforms: Uniforms) {
+
+        val temp = FloatArray(16)
+        // Store the original modelMatrix from the uniforms
+        val globalModelMatrix = uniforms.modelMatrix.copyOf()
+
+        children.forEach { childNode ->
+
+            // Pass total movement to the modelMatrix from the node
+            multiplyMM(temp, 0, globalModelMatrix, 0, childNode.modelMatrix, 0)
+            uniforms.modelMatrix = temp
+
+            // The number of meshes is equal or greater than the number of programs, since
+            // there shouldn't be 2 programs linked to the same mesh
+            childNode.meshesIndices.forEach { meshIdx ->
+
                 val mesh = meshes[meshIdx]
 
                 program.useProgram()

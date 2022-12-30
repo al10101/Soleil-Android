@@ -12,6 +12,9 @@ const val U_MODEL_MATRIX = "u_ModelMatrix"
 
 const val U_TEXTURE_UNIT = "u_TextureUnit"
 
+const val U_SHADOW_TEXTURE_UNIT = "u_ShadowTextureUnit"
+const val U_LIGHT_SPACE_MATRIX = "u_LightSpaceMatrix"
+
 const val U_CAMERA_POSITION = "u_CameraPosition"
 
 const val U_LIGHT_POSITION = "u_LightPosition"
@@ -41,6 +44,9 @@ open class ShaderProgram(
     }
     private val uModelMatrixLocation by lazy {
         glGetUniformLocation(program, U_MODEL_MATRIX)
+    }
+    private val uLightSpaceMatrixLocation by lazy {
+        glGetUniformLocation(program, U_LIGHT_SPACE_MATRIX)
     }
 
     private val uCameraPosition by lazy {
@@ -100,6 +106,7 @@ open class ShaderProgram(
         glUniformMatrix4fv(uProjectionMatrixLocation, 1, false, uniforms.projectionMatrix, 0)
         glUniformMatrix4fv(uViewMatrixLocation, 1, false, uniforms.viewMatrix, 0)
         glUniformMatrix4fv(uModelMatrixLocation, 1, false, uniforms.modelMatrix, 0)
+        glUniformMatrix4fv(uLightSpaceMatrixLocation, 1, false, uniforms.lightSpaceMatrix, 0)
         // Set up the camera position
         glUniform3fv(uCameraPosition, 1, uniforms.cameraPosition.toFloatArray(), 0)
         // Set up the lights

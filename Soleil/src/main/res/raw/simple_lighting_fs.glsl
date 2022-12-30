@@ -7,9 +7,34 @@ uniform vec3 u_LightPosition[1];
 uniform vec3 u_LightColor[1];
 uniform vec3 u_LightSpecular[1];
 
+uniform sampler2D u_TextureUnit;
+
 varying vec3 v_WorldPosition;
 varying vec3 v_WorldNormal;
 varying vec4 v_Color;
+varying vec4 v_LightSpacePosition;
+
+float shadowCalc(float dotLightNormal) {
+    // Transform from [-1, 1] range to [0, 1] range
+    vec3 pos = v_LightSpacePosition.xyz * 0.5 + 0.5;
+    if (pos.z > 1.0) {
+        pos.z = 1.0;
+    }
+    float depth = texture2D(u_TextureUnit, pos.xy).r;
+    // Bias to account for the stripe pattern due to imperfect resolution
+    float bias = max(0.05 * (-1.0 + dotLightNormal), 0.005);
+    return (depth + bias) < pos.z ? 0.0 : 1.0;
+    // PCF affects the fps a little bit too much, so it is avoided
+    //float shadow = 0.0;
+    //vec2 texelSize = 1.0 / vec2(u_xPixelOffset, u_yPixelOffset);
+    //for (int x = -1; x <= 1; ++x) {
+    //    for (int y = -1; y <= 1; ++y) {
+    //        float depth = texture2D(u_TextureUnit, pos.xy + vec2(x, y) * texelSize).r;
+    //        shadow += (depth + bias) < pos.z ? 0.0 : 1.0;
+    //    }
+    //}
+    //return shadow / 9.0;
+}
 
 void main() {
     // Initialize variables
@@ -21,7 +46,7 @@ void main() {
     // the direction vectors into unit vectors so that both the normal and
     // light vectors have a length of 1
     vec3 normalDirection = normalize(v_WorldNormal);
-    // Loop through lights
+    // Get direction of the only light
     vec3 lightDirection = normalize(-u_LightPosition[0]);
     // Get the dot product of the two vectors. When the fragment fully points toward
     // the light, the dot product will be -1. Negating the dot product will make
@@ -42,7 +67,9 @@ void main() {
     }
     // Add the ambient light as a small fraction of the base color
     vec3 ambientColor = baseColor * ambientLightIntensity;
+    // Calculate shadow
+    float shadow = shadowCalc(dotLightNormal); // either 0 or 1
     // Set the final color
-    vec3 res = diffuseColor + specularColor + ambientColor;
+    vec3 res = shadow * (diffuseColor + specularColor) + ambientColor;
     gl_FragColor = vec4(res, v_Color[3]);
 }

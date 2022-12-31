@@ -90,24 +90,24 @@ fun FloatArray.rotation(q: Quaternion) {
     // Not as straight forward as the other transformations. We need to imagine a reference
     // vector and rotate until that reference vector points to the direction from the input.
     // We then compute the angle and the vector from which we'll perform the rotation.
-    // Since the cross product would be zero if both vectors are parallel or anti-parallel,
-    // we need to handle that scenario first
-    val threshold = 0.99999f
+    // The cross product would be zero if both vectors are parallel or anti-parallel, the sign
+    // of cosTheta tells us the direction
+    val cross = q.ref.cross(q.dir)
     val cosTheta = q.ref.dot(q.dir) / (q.ref.length() * q.dir.length())
-    if (cosTheta > threshold) {
+    if (cross.length() == 0f) {
         identity()
-        // Do nothing, since that is the reference
-        return
-    } else if (cosTheta < -threshold) {
-        identity()
-        // Rotate to point the other side
-        val oUnit = q.ref.normalize()
-        rotateM(this, 0, 180f, oUnit.z, oUnit.x, oUnit.y)
-        return
+        if (cosTheta > 0f) {
+            // Do nothing, since that is the reference
+            return
+        } else if (cosTheta < 0f) {
+            // Rotate to point the other side
+            val oUnit = q.ref.normalize()
+            rotateM(this, 0, 180f, oUnit.z, oUnit.x, oUnit.y)
+            return
+        }
     }
     // Now that the danger is gone, we compute unitary vector from which we'll perform the
     // rotation
-    val cross = q.ref.cross(q.dir)
     val crossUnit = cross.normalize()
     // Angle of rotation in degrees because the Matrix.rotateM() method uses degrees
     val theta = acos(cosTheta) * RADIANS_TO_DEGREES

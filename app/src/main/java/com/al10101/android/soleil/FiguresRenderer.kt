@@ -6,6 +6,7 @@ import android.opengl.GLSurfaceView
 import com.al10101.android.soleil.data.Quaternion
 import com.al10101.android.soleil.data.RGB
 import com.al10101.android.soleil.data.Vector
+import com.al10101.android.soleil.extensions.identity
 import com.al10101.android.soleil.extensions.loadTexture
 import com.al10101.android.soleil.extensions.rotateY
 import com.al10101.android.soleil.framebuffers.PostProcessingFB
@@ -59,6 +60,7 @@ class FiguresRenderer(private val context: Context): GLSurfaceView.Renderer {
         //val program = SimpleTextureShaderProgram(context)
 
         // Set the models right away
+        val tempV = Vector(3f, -0.222f, 1.001f)
         val redCylinder = Cylinder(program, 2.4f, 40, 1.3f, rgb = RGB.red,
             position = Vector(0f, 0f, 1f)
         )
@@ -77,7 +79,7 @@ class FiguresRenderer(private val context: Context): GLSurfaceView.Renderer {
         val sidesHalf = sides / 2f
         val sidesQuart = sidesHalf / 2f
         val backWall = Quad(program, sides, sidesHalf,
-            position = Vector(0f, sidesQuart, -sidesHalf),
+            position = Vector(0f, sidesQuart, -sidesHalf)
         )
         val leftWall = Quad(program, sides, sidesHalf,
             position = Vector(-sidesHalf, sidesQuart, 0f),
@@ -90,6 +92,10 @@ class FiguresRenderer(private val context: Context): GLSurfaceView.Renderer {
         val frontWall = Quad(program, sides, sidesHalf,
             position = Vector(0f, sidesQuart, sidesHalf),
             rotation = Quaternion(Vector.unitaryZ, Vector.unitaryZ.negative())
+        )
+        val ceiling = Quad(program, sides, sides,
+            position = Vector(0f, sidesHalf, 0f),
+            rotation = Quaternion(Vector.unitaryY, Vector.unitaryZ)
         )
         val ground = Quad(program, sides, sides,
             rotation = Quaternion(Vector.unitaryY, Vector.unitaryZ.negative())
@@ -105,6 +111,7 @@ class FiguresRenderer(private val context: Context): GLSurfaceView.Renderer {
             rightWall,
             leftWall,
             frontWall,
+            ceiling,
             ground,
         )
 
@@ -116,7 +123,7 @@ class FiguresRenderer(private val context: Context): GLSurfaceView.Renderer {
         val ratio = width.toFloat() / height.toFloat()
 
         val camera = Camera(
-            position = Vector(0f, 4f, 12f),
+            position = Vector(0f, 0.4f, 12f),
             center = Vector(0f, 2f, 0f),
             aspect = ratio,
             fovy = 45f,

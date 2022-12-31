@@ -68,6 +68,7 @@ class PostProcessingFB(
         glBindFramebuffer(GL_FRAMEBUFFER, fbo[0])
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
         glEnable(GL_DEPTH_TEST)
+        glEnable(GL_BLEND)
 
         // Render all models
         models.forEach { it.onRender(uniforms) }
@@ -78,8 +79,9 @@ class PostProcessingFB(
         // Reset state for the final post-processing rendering
         glViewport(0, 0, screenWidth, screenHeight)
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
-        glClear(GL_COLOR_BUFFER_BIT or GL_COLOR_BUFFER_BIT)
+        glClear(GL_COLOR_BUFFER_BIT)
         glDisable(GL_DEPTH_TEST)
+        glDisable(GL_BLEND)
 
         ndcQuad.onRender(ndcUniforms)
 

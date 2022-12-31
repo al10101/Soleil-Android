@@ -46,7 +46,7 @@ open class Cone @JvmOverloads constructor(
 
         // Because of z-fighting, the cap will look weird if it's perfectly close. There must
         // be a little bit of extra border in it
-        val extraBorder = 1.005f
+        val extraBorder = 1.001f
 
         // The normal of each vertex of the cone is precomputed with trigonometry
         val flankLength = sqrt(radius*radius + height*height)
@@ -66,28 +66,34 @@ open class Cone @JvmOverloads constructor(
 
         // This model will contain 2 meshes, so we initialize 2 vertex arrays
         val coneVertices = FloatArray(totalComponents * coneStride)
-        val capVertices = FloatArray(totalComponents * capStride)
+        var capVertices: FloatArray? = null
+
+        if (cap) {
+            capVertices = FloatArray(totalComponents * capStride)
+        }
 
         var coneOffset = 0
         var capOffset = 0
 
         // Add the center to the cap
-        // Position
-        capVertices[capOffset++] = 0f
-        capVertices[capOffset++] = 0f
-        capVertices[capOffset++] = 0f
-        // Color
-        capVertices[capOffset++] = rgb.r
-        capVertices[capOffset++] = rgb.g
-        capVertices[capOffset++] = rgb.b
-        capVertices[capOffset++] = alpha
-        // Normal
-        capVertices[capOffset++] = 0f
-        capVertices[capOffset++] = -1f
-        capVertices[capOffset++] = 0f
-        // Texture
-        capVertices[capOffset++] = 0.5f
-        capVertices[capOffset++] = 0.5f
+        capVertices?.let {
+            // Position
+            it[capOffset++] = 0f
+            it[capOffset++] = 0f
+            it[capOffset++] = 0f
+            // Color
+            it[capOffset++] = rgb.r
+            it[capOffset++] = rgb.g
+            it[capOffset++] = rgb.b
+            it[capOffset++] = alpha
+            // Normal
+            it[capOffset++] = 0f
+            it[capOffset++] = -1f
+            it[capOffset++] = 0f
+            // Texture
+            it[capOffset++] = 0.5f
+            it[capOffset++] = 0.5f
+        }
 
         for (thetaIdx in 0 until slices) {
 
@@ -142,34 +148,36 @@ open class Cone @JvmOverloads constructor(
             faceOffset += 2
 
             // Cap
-            // Position
-            capVertices[capOffset++] = extraBorder * x
-            capVertices[capOffset++] = 0f
-            capVertices[capOffset++] = extraBorder * z
-            // Color
-            capVertices[capOffset++] = rgb.r
-            capVertices[capOffset++] = rgb.g
-            capVertices[capOffset++] = rgb.b
-            capVertices[capOffset++] = alpha
-            // Normal
-            capVertices[capOffset++] = 0f
-            capVertices[capOffset++] = -1f
-            capVertices[capOffset++] = 0f
-            // Texture
-            capVertices[capOffset++] = 0.5f + cosTheta * 0.5f
-            capVertices[capOffset++] = 0.5f + sinTheta * 0.5f
+            capVertices?.let {
+                // Position
+                it[capOffset++] = extraBorder * x
+                it[capOffset++] = 0f
+                it[capOffset++] = extraBorder * z
+                // Color
+                it[capOffset++] = rgb.r
+                it[capOffset++] = rgb.g
+                it[capOffset++] = rgb.b
+                it[capOffset++] = alpha
+                // Normal
+                it[capOffset++] = 0f
+                it[capOffset++] = -1f
+                it[capOffset++] = 0f
+                // Texture
+                it[capOffset++] = 0.5f + cosTheta * 0.5f
+                it[capOffset++] = 0.5f + sinTheta * 0.5f
+            }
 
         }
 
         val coneMesh = Mesh(coneVertices, faces)
-        val capMesh = Mesh(capVertices, capStride, GL_TRIANGLE_FAN)
+        val capMesh = capVertices?.let { Mesh(it, capStride, GL_TRIANGLE_FAN) }
 
         meshes.add(coneMesh)
         programs.add(program)
         meshIdxWithProgram.add(0) // index (mesh) 0 with program 0
 
-        if (cap) {
-            meshes.add(capMesh)
+        capMesh?.let {
+            meshes.add(it)
             meshIdxWithProgram.add(0) // index (mesh) 1 with program 0
         }
 

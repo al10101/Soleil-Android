@@ -4,6 +4,7 @@ import android.opengl.GLES20.GL_TRIANGLE_FAN
 import com.al10101.android.soleil.data.Quaternion
 import com.al10101.android.soleil.data.RGB
 import com.al10101.android.soleil.data.Vector
+import com.al10101.android.soleil.models.Face
 import com.al10101.android.soleil.models.Mesh
 import com.al10101.android.soleil.models.Model
 import com.al10101.android.soleil.nodes.ChildNode
@@ -47,52 +48,67 @@ open class Cylinder @JvmOverloads constructor(
 
         // Because of z-fighting, the caps will look weird if they're perfectly close. There must
         // be a little bit of extra border in them
-        val extraBorder = 1.005f
+        val extraBorder = 1.001f
+
+        // The computation of the top cap is not in winding order, so we need to store the faces
+        val topFaces = mutableListOf<Face>()
+        var faceOffset = 0
 
         // This model will contain 3 different meshes, so we initialize 3 vertex arrays
         val tubeVertices = FloatArray(totalComponents * tubeStride)
-        val bottomVertices = FloatArray(totalComponents * capStride)
-        val topVertices = FloatArray(totalComponents * capStride)
+        var bottomVertices: FloatArray? = null
+        var topVertices: FloatArray? = null
+
+        if (bottomCap) {
+            bottomVertices = FloatArray(totalComponents * capStride)
+        }
+        if (topCap) {
+            topVertices = FloatArray(totalComponents * capStride)
+        }
 
         var tubeOffset = 0
         var bottomOffset = 0
         var topOffset = 0
 
         // Add the center to the bottom
-        // Position
-        bottomVertices[bottomOffset++] = 0f
-        bottomVertices[bottomOffset++] = 0f
-        bottomVertices[bottomOffset++] = 0f
-        // Color
-        bottomVertices[bottomOffset++] = rgb.r
-        bottomVertices[bottomOffset++] = rgb.g
-        bottomVertices[bottomOffset++] = rgb.b
-        bottomVertices[bottomOffset++] = alpha
-        // Normal
-        bottomVertices[bottomOffset++] = 0f
-        bottomVertices[bottomOffset++] = -1f
-        bottomVertices[bottomOffset++] = 0f
-        // Texture
-        bottomVertices[bottomOffset++] = 0.5f
-        bottomVertices[bottomOffset++] = 0.5f
+        bottomVertices?.let {
+            // Position
+            it[bottomOffset++] = 0f
+            it[bottomOffset++] = 0f
+            it[bottomOffset++] = 0f
+            // Color
+            it[bottomOffset++] = rgb.r
+            it[bottomOffset++] = rgb.g
+            it[bottomOffset++] = rgb.b
+            it[bottomOffset++] = alpha
+            // Normal
+            it[bottomOffset++] = 0f
+            it[bottomOffset++] = -1f
+            it[bottomOffset++] = 0f
+            // Texture
+            it[bottomOffset++] = 0.5f
+            it[bottomOffset++] = 0.5f
+        }
 
         // Add the center to the top
-        // Position
-        topVertices[topOffset++] = 0f
-        topVertices[topOffset++] = height
-        topVertices[topOffset++] = 0f
-        // Color
-        topVertices[topOffset++] = rgb.r
-        topVertices[topOffset++] = rgb.g
-        topVertices[topOffset++] = rgb.b
-        topVertices[topOffset++] = alpha
-        // Normal
-        topVertices[topOffset++] = 0f
-        topVertices[topOffset++] = 1f
-        topVertices[topOffset++] = 0f
-        // Texture
-        topVertices[topOffset++] = 0.5f
-        topVertices[topOffset++] = 0.5f
+        topVertices?.let {
+            // Position
+            it[topOffset++] = 0f
+            it[topOffset++] = height
+            it[topOffset++] = 0f
+            // Color
+            it[topOffset++] = rgb.r
+            it[topOffset++] = rgb.g
+            it[topOffset++] = rgb.b
+            it[topOffset++] = alpha
+            // Normal
+            it[topOffset++] = 0f
+            it[topOffset++] = 1f
+            it[topOffset++] = 0f
+            // Texture
+            it[topOffset++] = 0.5f
+            it[topOffset++] = 0.5f
+        }
 
         for (thetaIdx in 0 until slices) {
 
@@ -141,40 +157,50 @@ open class Cylinder @JvmOverloads constructor(
             tubeVertices[tubeOffset++] = 1f
 
             // BottomCap
-            // Position
-            bottomVertices[bottomOffset++] = extraBorder * x
-            bottomVertices[bottomOffset++] = 0f
-            bottomVertices[bottomOffset++] = extraBorder * z
-            // Color
-            bottomVertices[bottomOffset++] = rgb.r
-            bottomVertices[bottomOffset++] = rgb.g
-            bottomVertices[bottomOffset++] = rgb.b
-            bottomVertices[bottomOffset++] = alpha
-            // Normal
-            bottomVertices[bottomOffset++] = 0f
-            bottomVertices[bottomOffset++] = -1f
-            bottomVertices[bottomOffset++] = 0f
-            // Texture
-            bottomVertices[bottomOffset++] = 0.5f + cosTheta * 0.5f
-            bottomVertices[bottomOffset++] = 0.5f + sinTheta * 0.5f
+            bottomVertices?.let {
+                // Position
+                it[bottomOffset++] = extraBorder * x
+                it[bottomOffset++] = 0f
+                it[bottomOffset++] = extraBorder * z
+                // Color
+                it[bottomOffset++] = rgb.r
+                it[bottomOffset++] = rgb.g
+                it[bottomOffset++] = rgb.b
+                it[bottomOffset++] = alpha
+                // Normal
+                it[bottomOffset++] = 0f
+                it[bottomOffset++] = -1f
+                it[bottomOffset++] = 0f
+                // Texture
+                it[bottomOffset++] = 0.5f + cosTheta * 0.5f
+                it[bottomOffset++] = 0.5f + sinTheta * 0.5f
+            }
 
             // TopCap
-            // Position
-            topVertices[topOffset++] = extraBorder * z
-            topVertices[topOffset++] = height
-            topVertices[topOffset++] = extraBorder * x
-            // Color
-            topVertices[topOffset++] = rgb.r
-            topVertices[topOffset++] = rgb.g
-            topVertices[topOffset++] = rgb.b
-            topVertices[topOffset++] = alpha
-            // Normal
-            topVertices[topOffset++] = 0f
-            topVertices[topOffset++] = 1f
-            topVertices[topOffset++] = 0f
-            // Texture
-            topVertices[topOffset++] = 0.5f + cosTheta * 0.5f
-            topVertices[topOffset++] = 0.5f + sinTheta * 0.5f
+            topVertices?.let {
+                // Position
+                it[topOffset++] = extraBorder * x
+                it[topOffset++] = height
+                it[topOffset++] = extraBorder * z
+                // Color
+                it[topOffset++] = rgb.r
+                it[topOffset++] = rgb.g
+                it[topOffset++] = rgb.b
+                it[topOffset++] = alpha
+                // Normal
+                it[topOffset++] = 0f
+                it[topOffset++] = 1f
+                it[topOffset++] = 0f
+                // Texture
+                it[topOffset++] = 0.5f + cosTheta * 0.5f
+                it[topOffset++] = 0.5f + sinTheta * 0.5f
+            }
+
+            // Add the faces. If it is the last slice, close the triangle
+            val nextFace = if (thetaIdx == slices-1) { 1 } else { faceOffset + 1 }
+            val currentFace = Face(faceOffset, 0, nextFace)
+            topFaces.add(currentFace)
+            faceOffset ++
 
         }
 
@@ -183,23 +209,23 @@ open class Cylinder @JvmOverloads constructor(
             tubeVertices[tubeOffset++] = tubeVertices[i]
         }
 
-        // No faces are needed
+        // Faces only needed for the top mesh
+        val topMesh = topVertices?.let { Mesh(it, topFaces) }
         val tubeMesh = Mesh(tubeVertices, tubeStride)
-        val topMesh = Mesh(topVertices, capStride, GL_TRIANGLE_FAN)
-        val bottomMesh = Mesh(bottomVertices, capStride, GL_TRIANGLE_FAN)
+        val bottomMesh = bottomVertices?.let { Mesh(it, capStride, GL_TRIANGLE_FAN) }
 
         meshes.add(tubeMesh)
         programs.add(program)
         meshIdxWithProgram.add(0) // index (mesh) 0 with program 0
 
         var capCounter = 0
-        if (bottomCap) {
-            meshes.add(bottomMesh)
+        bottomMesh?.let {
+            meshes.add(it)
             meshIdxWithProgram.add(0) // index (mesh) 1 with program 0
             capCounter ++
         }
-        if (topCap) {
-            meshes.add(topMesh)
+        topMesh?.let {
+            meshes.add(it)
             meshIdxWithProgram.add(0) // index (mesh) 2 with program 0
             capCounter ++
         }

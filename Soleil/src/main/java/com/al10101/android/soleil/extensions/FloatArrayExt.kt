@@ -1,7 +1,10 @@
 package com.al10101.android.soleil.extensions
 
 import android.opengl.Matrix.*
+import com.al10101.android.soleil.data.Quaternion
 import com.al10101.android.soleil.data.Vector
+import com.al10101.android.soleil.utils.RADIANS_TO_DEGREES
+import kotlin.math.acos
 
 // 4x4 matrix
 fun FloatArray.column(j: Int): FloatArray {
@@ -70,11 +73,46 @@ fun FloatArray.translation(translate: Vector) {
     translateM(this, 0, translate.x, translate.y, translate.z)
 }
 
-fun FloatArray.rotation(rotate: Vector) {
+fun FloatArray.rotateX(angle: Float) {
     identity()
-    rotateM(this, 0, rotate.x, 1f, 0f, 0f)
-    rotateM(this, 0, rotate.y, 0f, 1f, 0f)
-    rotateM(this, 0, rotate.z, 0f, 0f, 1f)
+    rotateM(this, 0, angle, 1f, 0f, 0f)
+}
+fun FloatArray.rotateY(angle: Float) {
+    identity()
+    rotateM(this, 0, angle, 0f, 1f, 0f)
+}
+fun FloatArray.rotateZ(angle: Float) {
+    identity()
+    rotateM(this, 0, angle, 0f, 0f, 1f)
+}
+
+fun FloatArray.rotation(q: Quaternion) {
+    // Not as straight forward as the other transformations. We need to imagine a reference
+    // vector and rotate until that reference vector points to the direction from the input.
+    // We then compute the angle and the vector from which we'll perform the rotation.
+    // Since the cross product would be zero if both vectors are parallel or anti-parallel,
+    // we need to handle that scenario first
+    val threshold = 0.99999f
+    val cosTheta = q.ref.dot(q.dir) / (q.ref.length() * q.dir.length())
+    if (cosTheta > threshold) {
+        identity()
+        // Do nothing, since that is the reference
+        return
+    } else if (cosTheta < -threshold) {
+        identity()
+        // Rotate to point the other side
+        val oUnit = q.ref.normalize()
+        rotateM(this, 0, 180f, oUnit.z, oUnit.x, oUnit.y)
+        return
+    }
+    // Now that the danger is gone, we compute unitary vector from which we'll perform the
+    // rotation
+    val cross = q.ref.cross(q.dir)
+    val crossUnit = cross.normalize()
+    // Angle of rotation in degrees because the Matrix.rotateM() method uses degrees
+    val theta = acos(cosTheta) * RADIANS_TO_DEGREES
+    identity()
+    rotateM(this, 0, theta, crossUnit.x, crossUnit.y, crossUnit.z)
 }
 
 fun FloatArray.scaling(scale: Vector) {

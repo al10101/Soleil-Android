@@ -13,6 +13,8 @@ class Vector(
 
     fun toFloatArray() = floatArrayOf(x, y, z)
 
+    fun negative() = Vector(-x, -y, -z)
+
     fun add(other: Vector) = Vector(
         x + other.x,
         y + other.y,
@@ -98,3 +100,15 @@ data class Rectangle(
     val bottom: Float,
     val top: Float
 )
+
+data class Quaternion(
+    val ref: Vector, // Reference vector
+    val dir: Vector  // Direction to which we want the original reference to point
+) {
+    companion object {
+        val upY = Quaternion(
+            Vector.unitaryY,
+            Vector.unitaryY
+        )
+    }
+}

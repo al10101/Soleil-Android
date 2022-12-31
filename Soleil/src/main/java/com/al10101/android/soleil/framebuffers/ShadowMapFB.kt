@@ -15,15 +15,15 @@ import com.al10101.android.soleil.uniforms.Uniforms
 
 class ShadowMapFB(
     context: Context,
-    private val fbWidth: Int,
-    private val fbHeight: Int,
-    private val screenWidth: Int,
-    private val screenHeight: Int,
+    fbWidth: Int,
+    fbHeight: Int,
+    screenWidth: Int,
+    screenHeight: Int,
     sunlight: Light
-): FrameBuffer {
-
-    private val fbo = IntArray(1)
-    private val texture = IntArray(1)
+): FrameBuffer(
+    ShaderProgram(context, R.raw.simple_texture_vs, R.raw.blank_fs),
+    fbWidth, fbHeight, screenWidth, screenHeight
+) {
 
     private val shadowProgram = ShaderProgram(context,
         R.raw.simple_texture_vs,
@@ -81,7 +81,7 @@ class ShadowMapFB(
 
     }
 
-    override fun onRender(models: List<Model>, uniforms: Uniforms): Uniforms {
+    override fun onRender(models: List<Model>, uniforms: Uniforms) {
 
         // Bind so the next gl calls write into this buffer
         glViewport(0, 0, fbWidth, fbHeight)
@@ -106,8 +106,6 @@ class ShadowMapFB(
         // With the rendering now completed, we bind the light space matrix and shadow textures
         uniforms.textureIds!![0] = texture[0]
         multiplyMM(uniforms.lightSpaceMatrix, 0, lightSpaceUniforms.projectionMatrix, 0, lightSpaceUniforms.viewMatrix, 0)
-
-        return uniforms
 
     }
 

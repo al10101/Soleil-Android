@@ -12,7 +12,6 @@ const val U_MODEL_MATRIX = "u_ModelMatrix"
 
 const val U_TEXTURE_UNIT = "u_TextureUnit"
 
-const val U_SHADOW_TEXTURE_UNIT = "u_ShadowTextureUnit"
 const val U_LIGHT_SPACE_MATRIX = "u_LightSpaceMatrix"
 
 const val U_CAMERA_POSITION = "u_CameraPosition"

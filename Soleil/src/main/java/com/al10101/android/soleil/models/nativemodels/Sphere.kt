@@ -1,8 +1,8 @@
 package com.al10101.android.soleil.models.nativemodels
 
+import com.al10101.android.soleil.data.Quaternion
 import com.al10101.android.soleil.data.RGB
 import com.al10101.android.soleil.data.Vector
-import com.al10101.android.soleil.models.Face
 import com.al10101.android.soleil.models.Mesh
 import com.al10101.android.soleil.models.Model
 import com.al10101.android.soleil.nodes.ChildNode
@@ -17,7 +17,7 @@ open class Sphere @JvmOverloads constructor(
     rgb: RGB = RGB.white,
     alpha: Float = 1f,
     position: Vector = Vector.zero,
-    rotation: Vector = Vector.zero,
+    rotation: Quaternion = Quaternion.upY,
     scale: Vector = Vector.one,
     name: String = "Sphere"
 ): Model(name) {

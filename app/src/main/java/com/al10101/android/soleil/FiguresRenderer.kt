@@ -3,17 +3,16 @@ package com.al10101.android.soleil
 import android.content.Context
 import android.opengl.GLES20.*
 import android.opengl.GLSurfaceView
+import com.al10101.android.soleil.data.Quaternion
 import com.al10101.android.soleil.data.RGB
 import com.al10101.android.soleil.data.Vector
-import com.al10101.android.soleil.extensions.loadTexture
-import com.al10101.android.soleil.extensions.rotation
+import com.al10101.android.soleil.extensions.identity
+import com.al10101.android.soleil.extensions.rotateY
 import com.al10101.android.soleil.framebuffers.PostProcessingFB
 import com.al10101.android.soleil.framebuffers.ShadowMapFB
 import com.al10101.android.soleil.models.Model
 import com.al10101.android.soleil.models.nativemodels.*
-import com.al10101.android.soleil.programs.ShaderProgram
-import com.al10101.android.soleil.programs.SimpleLightShaderProgram
-import com.al10101.android.soleil.programs.SimpleTextureShaderProgram
+import com.al10101.android.soleil.programs.*
 import com.al10101.android.soleil.uniforms.Camera
 import com.al10101.android.soleil.uniforms.Light
 import com.al10101.android.soleil.uniforms.LightArray
@@ -52,8 +51,7 @@ class FiguresRenderer(private val context: Context): GLSurfaceView.Renderer {
         glClearColor(bgColor.r, bgColor.g, bgColor.b, 1f)
 
         // Define program
-        val lightProgram = SimpleLightShaderProgram(context)
-        val textProgram = SimpleTextureShaderProgram(context)
+        val lightProgram = SimpleSunlightShaderProgram(context)
 
         // Set the models right away
         val redCylinder = Cylinder(lightProgram, 2f, 40, 1f, rgb = RGB.red,
@@ -64,13 +62,13 @@ class FiguresRenderer(private val context: Context): GLSurfaceView.Renderer {
         )
         val blueBox = Box(lightProgram, 3f, 1f, 3f, RGB.blue,
             position = Vector(-2.4f, 0.5f, -2f),
-            rotation = Vector(0f, 32f, 0f)
+            rotation = Quaternion(Vector.unitaryX, Vector(1f, 0f, 1f))
         )
-        val yellowCone = Cone(lightProgram, 3f, 40, 1.5f, rgb = RGB(1f, 1f, 0f),
+        val yellowCone = Cone(lightProgram, 3f, 10, 1.5f, rgb = RGB.yellow,
             position = Vector(2f, 0f, 3f)
         )
-        val ground = Quad(lightProgram, 20f, 20f, RGB.white,
-            rotation = Vector(-90f, 0f, 0f)
+        val ground = Quad(lightProgram, 10f, 10f, RGB.white,
+            rotation = Quaternion(Vector.unitaryY, Vector.unitaryZ.negative())
         )
 
         models = listOf(
@@ -99,7 +97,7 @@ class FiguresRenderer(private val context: Context): GLSurfaceView.Renderer {
             setPerspectiveProjectionMatrix()
         }
 
-        val sunlight = Light(position=Vector(10f, 5f, 10f))
+        val sunlight = Light(position=Vector(10f, 10f, 10f))
         val lightArray = LightArray.unrollLights(
             listOf(sunlight)
         )
@@ -110,13 +108,13 @@ class FiguresRenderer(private val context: Context): GLSurfaceView.Renderer {
             camera.projectionMatrix,
             camera.position,
             lightArray,
-            IntArray(1) //intArrayOf(context.loadTexture(R.drawable.old_obunga))
+            IntArray(1) // 1 space for our shadow texture
         )
 
         shadowMapFB = ShadowMapFB(context, width*2, height*2, width, height, sunlight)
         postProcessingFB = PostProcessingFB(
-            ShaderProgram(context, R.raw.simple_texture_vs, R.raw.simple_texture_fs),
-            width, height
+            SimpleTextureShaderProgram(context),
+            width, height, width, height
         )
 
         globalStartTime = System.nanoTime()
@@ -128,13 +126,13 @@ class FiguresRenderer(private val context: Context): GLSurfaceView.Renderer {
 
         // Move the whole scene
         val currentTime = (System.nanoTime() - globalStartTime) / NANOSECONDS
-        val rotation = Vector(0f, currentTime * 15f, 0f)
-        uniforms.modelMatrix.rotation(rotation)
+        val angle = currentTime * 15f
+        uniforms.modelMatrix.rotateY(angle)
 
         // Render the depth of the scene to get the shadow texture
-        uniforms = shadowMapFB.onRender(models, uniforms)
+        shadowMapFB.onRender(models, uniforms)
 
-        // With the uniforms ready, render the scene normally. Put everything in the postprocessing
+        // With the uniforms ready, render the scene again with post-processing effects
         postProcessingFB.onRender(models, uniforms)
 
     }

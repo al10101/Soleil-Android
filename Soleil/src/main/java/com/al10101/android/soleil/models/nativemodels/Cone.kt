@@ -1,6 +1,7 @@
 package com.al10101.android.soleil.models.nativemodels
 
 import android.opengl.GLES20.GL_TRIANGLE_FAN
+import com.al10101.android.soleil.data.Quaternion
 import com.al10101.android.soleil.data.RGB
 import com.al10101.android.soleil.data.Vector
 import com.al10101.android.soleil.models.Face
@@ -20,7 +21,7 @@ open class Cone @JvmOverloads constructor(
     rgb: RGB = RGB.white,
     alpha: Float = 1f,
     position: Vector = Vector.zero,
-    rotation: Vector = Vector.zero,
+    rotation: Quaternion = Quaternion.upY,
     scale: Vector = Vector.one,
     name: String = "Cone"
 ): Model(name) {

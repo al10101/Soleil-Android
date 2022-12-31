@@ -29,6 +29,9 @@ class RGB(
         val red = RGB(1f, 0f, 0f)
         val green = RGB(0f, 1f, 0f)
         val blue = RGB(0f, 0f, 1f)
+        val yellow = RGB(1f, 1f, 0f)
+        val magenta = RGB(1f, 0f, 1f)
+        val cyan = RGB(0f, 1f, 1f)
         fun grayScale(g: Float) = RGB(g, g, g)
         fun fromHex(hexHash: String): RGB {
             val color = Color.parseColor(hexHash)

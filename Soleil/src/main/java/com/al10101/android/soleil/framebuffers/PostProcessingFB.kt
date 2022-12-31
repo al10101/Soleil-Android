@@ -1,29 +1,24 @@
 package com.al10101.android.soleil.framebuffers
 
-import android.content.Context
 import android.opengl.GLES20.*
 import android.util.Log
-import com.al10101.android.soleil.R
 import com.al10101.android.soleil.models.Model
 import com.al10101.android.soleil.models.nativemodels.Quad
 import com.al10101.android.soleil.programs.ShaderProgram
 import com.al10101.android.soleil.uniforms.Uniforms
-import com.al10101.android.soleil.utils.FRAME_BUFFERS_TAG
 import com.al10101.android.soleil.utils.MODELS_TAG
 
 class PostProcessingFB(
     postProgram: ShaderProgram,
-    private val screenWidth: Int,
-    private val screenHeight: Int
-): FrameBuffer {
-
-    private val fbo = IntArray(1)
-    private val rbo = IntArray(1)
-    private val texture = IntArray(1)
+    fbWidth: Int,
+    fbHeight: Int,
+    screenWidth: Int,
+    screenHeight: Int,
+): FrameBuffer(postProgram, fbWidth, fbHeight, screenWidth, screenHeight) {
 
     private val ndcQuad: Quad = Quad(postProgram, 2f, 2f)
     private val ndcUniforms: Uniforms = Uniforms.normalizedDeviceCoordinates().apply {
-        textureIds = IntArray(1) // We will use 1 texture
+        textureIds = IntArray(1) // We will use 1 texture to link the fb to the quad
     }
 
     init {
@@ -66,7 +61,7 @@ class PostProcessingFB(
 
     }
 
-    override fun onRender(models: List<Model>, uniforms: Uniforms): Uniforms {
+    override fun onRender(models: List<Model>, uniforms: Uniforms) {
 
         // Bind so the next gl calls write into this buffer
         glViewport(0, 0, screenWidth, screenHeight)
@@ -83,12 +78,10 @@ class PostProcessingFB(
         // Reset state for the final post-processing rendering
         glViewport(0, 0, screenWidth, screenHeight)
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
-        glClear(GL_COLOR_BUFFER_BIT)
+        glClear(GL_COLOR_BUFFER_BIT or GL_COLOR_BUFFER_BIT)
         glDisable(GL_DEPTH_TEST)
 
         ndcQuad.onRender(ndcUniforms)
-
-        return uniforms
 
     }
 

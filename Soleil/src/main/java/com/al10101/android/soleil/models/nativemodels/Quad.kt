@@ -1,5 +1,6 @@
 package com.al10101.android.soleil.models.nativemodels
 
+import com.al10101.android.soleil.data.Quaternion
 import com.al10101.android.soleil.data.RGB
 import com.al10101.android.soleil.data.Vector
 import com.al10101.android.soleil.models.Face
@@ -16,7 +17,7 @@ open class Quad @JvmOverloads constructor(
     clipS: Float = 0f,
     clipT: Float = 0f,
     position: Vector = Vector.zero,
-    rotation: Vector = Vector.zero,
+    rotation: Quaternion = Quaternion.upY,
     scale: Vector = Vector.one,
     name: String = "Quad"
 ): Model(name) {

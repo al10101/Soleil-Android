@@ -24,16 +24,6 @@ float shadowCalc(float dotLightNormal) {
     // Bias to account for the stripe pattern due to imperfect resolution
     float bias = max(0.05 * (-1.0 + dotLightNormal), 0.005);
     return (depth + bias) < pos.z ? 0.0 : 1.0;
-    // PCF affects the fps a little bit too much, so it is avoided
-    //float shadow = 0.0;
-    //vec2 texelSize = 1.0 / vec2(u_xPixelOffset, u_yPixelOffset);
-    //for (int x = -1; x <= 1; ++x) {
-    //    for (int y = -1; y <= 1; ++y) {
-    //        float depth = texture2D(u_TextureUnit, pos.xy + vec2(x, y) * texelSize).r;
-    //        shadow += (depth + bias) < pos.z ? 0.0 : 1.0;
-    //    }
-    //}
-    //return shadow / 9.0;
 }
 
 void main() {
@@ -71,5 +61,5 @@ void main() {
     float shadow = shadowCalc(dotLightNormal); // either 0 or 1
     // Set the final color
     vec3 res = shadow * (diffuseColor + specularColor) + ambientColor;
-    gl_FragColor = vec4(res, v_Color[3]);
+    gl_FragColor = vec4(res, v_Color.a);
 }

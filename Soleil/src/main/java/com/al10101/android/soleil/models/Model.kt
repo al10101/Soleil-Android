@@ -44,8 +44,17 @@ open class Model(
                 val program = programs[programIdx]
                 val mesh = meshes[meshIdx]
 
+                // The number of textures is less, equal or greater than the number of meshes, since
+                // there can be 2 textures linked to the same mesh
+                val mutableTextures = mutableListOf<Int>()
+                textureIdIdxWithMeshIdx.forEachIndexed { i, it ->
+                    if (it == meshIdx) {
+                        mutableTextures.add(textureIds[i])
+                    }
+                }
+
                 program.useProgram()
-                program.setUniforms(uniforms)
+                program.setUniforms(uniforms, mutableTextures)
                 mesh.bindData(program)
                 mesh.draw()
 
@@ -76,8 +85,17 @@ open class Model(
 
                 val mesh = meshes[meshIdx]
 
+                // The number of textures is less, equal or greater than the number of meshes, since
+                // there can be 2 textures linked to the same mesh
+                val mutableTextures = mutableListOf<Int>()
+                textureIdIdxWithMeshIdx.forEachIndexed { i, it ->
+                    if (it == meshIdx) {
+                        mutableTextures.add(textureIds[i])
+                    }
+                }
+
                 program.useProgram()
-                program.setUniforms(uniforms)
+                program.setUniforms(uniforms, mutableTextures)
                 mesh.bindData(program)
                 mesh.draw()
 
@@ -88,6 +106,14 @@ open class Model(
         // Reset to original value for next model
         uniforms.modelMatrix = globalModelMatrix
 
+    }
+
+    fun changeTextureInIdx(idx: Int, newTexture: Int) {
+        try {
+            textureIds[idx] = newTexture
+        } catch (e: IndexOutOfBoundsException) {
+            Log.e(MODELS_TAG, "The model $name cannot change texture at index $idx because it has ${textureIds.size} textures")
+        }
     }
 
 }

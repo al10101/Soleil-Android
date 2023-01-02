@@ -10,10 +10,11 @@ import com.al10101.android.soleil.nodes.ChildNode
 import com.al10101.android.soleil.programs.ShaderProgram
 
 open class Box @JvmOverloads constructor(
-    program: ShaderProgram,
     width: Float, height: Float, depth: Float,
+    program: ShaderProgram,
     rgb: RGB = RGB.white,
     alpha: Float = 1f,
+    textureId: Int? = null,
     position: Vector = Vector.zero,
     rotation: Quaternion = Quaternion.upY,
     scale: Vector = Vector.one,
@@ -95,6 +96,15 @@ open class Box @JvmOverloads constructor(
         programs.add(program)
         for (i in 0 until 6) {
             meshIdxWithProgram.add(0) // All 6 faces are linked to program nr. 0
+        }
+
+        // Add the same texture to all the 6 meshes
+        textureId?.let {
+            // All 6 faces are linked to the same texture
+            for (i in 0 until 6) {
+                textureIds.add(it)
+                textureIdIdxWithMeshIdx.add(i)  // texture idx i is linked to mesh idx i
+            }
         }
 
         // Link the only children to the mesh

@@ -6,7 +6,6 @@ import android.opengl.GLSurfaceView
 import com.al10101.android.soleil.data.Quaternion
 import com.al10101.android.soleil.data.RGB
 import com.al10101.android.soleil.data.Vector
-import com.al10101.android.soleil.extensions.identity
 import com.al10101.android.soleil.extensions.loadTexture
 import com.al10101.android.soleil.extensions.rotateY
 import com.al10101.android.soleil.framebuffers.PostProcessingFB
@@ -48,56 +47,57 @@ class FiguresRenderer(private val context: Context): GLSurfaceView.Renderer {
         glEnable(GL_DEPTH_TEST)
         glDepthMask(true)
 
-        // Enable default blending
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
         val bgColor = RGB.grayScale(0.1f)
         glClearColor(bgColor.r, bgColor.g, bgColor.b, 1f)
 
         // Define program
-        val program = SimpleSunlightShaderProgram(context)
-        //val program = SimpleTextureShaderProgram(context)
+        val sunlightProgram = SunlightShaderProgram(context)
+        val textureProgram = SimpleTextureShaderProgram(context)
+        val textureId = context.loadTexture(R.drawable.old_obunga)
 
         // Set the models right away
-        val tempV = Vector(3f, -0.222f, 1.001f)
-        val redCylinder = Cylinder(program, 2.4f, 40, 1.3f, rgb = RGB.red,
+        val redCylinder = Cylinder(2.4f, 40, 1.3f, sunlightProgram,
+            rgb = RGB.red,
             position = Vector(0f, 0f, 1f)
         )
-        val greenSphere = Sphere(program, 40, 40, 1.8f, RGB.green,
+        val greenSphere = Sphere(40, 40, 1.8f, sunlightProgram,
+            rgb = RGB.green,
             position = Vector(1.8f, 1.8f, -3f)
         )
-        val blueBox = Box(program, 3f, 4f, 1f, RGB.blue,
+        val blueBox = Box(3f, 4f, 1f, sunlightProgram,
+            rgb = RGB.blue,
             position = Vector(-3f, 2f, -1.2f),
             rotation = Quaternion(Vector.unitaryX, Vector(1f, 0f, 1f))
         )
-        val yellowCone = Cone(program, 4.8f, 40, 1.8f, rgb = RGB.yellow,
+        val yellowCone = Cone(4.8f, 40, 1.8f, sunlightProgram,
+            rgb = RGB.yellow,
             position = Vector(2.8f, 0f, 3f)
         )
 
         val sides = 10.5f
         val sidesHalf = sides / 2f
         val sidesQuart = sidesHalf / 2f
-        val backWall = Quad(program, sides, sidesHalf,
+        val backWall = Quad(sides, sidesHalf, sunlightProgram,
             position = Vector(0f, sidesQuart, -sidesHalf)
         )
-        val leftWall = Quad(program, sides, sidesHalf,
+        val leftWall = Quad(sides, sidesHalf, sunlightProgram,
             position = Vector(-sidesHalf, sidesQuart, 0f),
             rotation = Quaternion(Vector.unitaryX, Vector.unitaryZ.negative())
         )
-        val rightWall = Quad(program, sides, sidesHalf,
+        val rightWall = Quad(sides, sidesHalf, sunlightProgram,
             position = Vector(sidesHalf, sidesQuart, 0f),
             rotation = Quaternion(Vector.unitaryZ, Vector.unitaryX.negative())
         )
-        val frontWall = Quad(program, sides, sidesHalf,
+        val frontWall = Quad(sides, sidesHalf, textureProgram,
+            textureId = textureId,
             position = Vector(0f, sidesQuart, sidesHalf),
-            rotation = Quaternion(Vector.unitaryZ, Vector.unitaryZ.negative())
+            rotation = Quaternion(Vector.unitaryX, Vector.unitaryX.negative())
         )
-        val ceiling = Quad(program, sides, sides,
+        val ceiling = Quad(sides, sides, sunlightProgram,
             position = Vector(0f, sidesHalf, 0f),
             rotation = Quaternion(Vector.unitaryY, Vector.unitaryZ)
         )
-        val ground = Quad(program, sides, sides,
+        val ground = Quad(sides, sides, sunlightProgram,
             rotation = Quaternion(Vector.unitaryY, Vector.unitaryZ.negative())
         )
 
@@ -123,7 +123,7 @@ class FiguresRenderer(private val context: Context): GLSurfaceView.Renderer {
         val ratio = width.toFloat() / height.toFloat()
 
         val camera = Camera(
-            position = Vector(0f, 0.4f, 12f),
+            position = Vector(0f, 4f, 12f),
             center = Vector(0f, 2f, 0f),
             aspect = ratio,
             fovy = 45f,
@@ -144,14 +144,13 @@ class FiguresRenderer(private val context: Context): GLSurfaceView.Renderer {
             camera.viewMatrix,
             camera.projectionMatrix,
             camera.position,
-            lightArray,
-            intArrayOf(context.loadTexture(R.drawable.old_obunga)) // 1 space for our shadow texture
+            lightArray
         )
 
         shadowMapFB = ShadowMapFB(context, width*2, height*2, width, height, sunlight)
         postProcessingFB = PostProcessingFB(
-            //KernelShaderProgram.defaultKernel(context, KernelType.PSYCHEDELIC),
-            ShaderProgram(context, R.raw.simple_texture_vs, R.raw.simple_texture_fs),
+            KernelShaderProgram.defaultKernel(context, KernelType.PSYCHEDELIC),
+            //ShaderProgram(context, R.raw.simple_texture_vs, R.raw.post_inversion),
             width, height, width, height
         )
 
@@ -164,14 +163,21 @@ class FiguresRenderer(private val context: Context): GLSurfaceView.Renderer {
 
         // Move the whole scene
         val currentTime = (System.nanoTime() - globalStartTime) / NANOSECONDS
-        val angle = currentTime * 15f
+        val angle = (currentTime * 15f) % 360f
         uniforms.modelMatrix.rotateY(angle)
 
         // Render the depth of the scene to get the shadow texture
         shadowMapFB.onRender(models, uniforms)
 
-        // With the uniforms ready, render the scene again with post-processing effects
-        postProcessingFB.onRender(models, uniforms)
+        // With the shadow texture ready inside the uniforms, render the scene again
+        val delta = 25f
+        if (angle in (90f-delta)..(270f+delta)) {
+            // Render with post-processing effects
+            postProcessingFB.onRender(models, uniforms)
+        } else {
+            // Render normally
+            models.forEach { it.onRender(uniforms) }
+        }
 
     }
 

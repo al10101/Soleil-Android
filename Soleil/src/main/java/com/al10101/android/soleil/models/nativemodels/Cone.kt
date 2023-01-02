@@ -15,11 +15,12 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 open class Cone @JvmOverloads constructor(
-    program: ShaderProgram,
     height: Float, slices: Int, radius: Float,
+    program: ShaderProgram,
     cap: Boolean = true,
     rgb: RGB = RGB.white,
     alpha: Float = 1f,
+    textureId: Int? = null,
     position: Vector = Vector.zero,
     rotation: Quaternion = Quaternion.upY,
     scale: Vector = Vector.one,
@@ -179,6 +180,16 @@ open class Cone @JvmOverloads constructor(
         capMesh?.let {
             meshes.add(it)
             meshIdxWithProgram.add(0) // index (mesh) 1 with program 0
+        }
+
+        // Add the same texture to the 2 meshes
+        textureId?.let {
+            textureIds.add(it)
+            textureIdIdxWithMeshIdx.add(0) // texture idx 0 is linked to mesh idx 0
+            if (cap) {
+                textureIds.add(it)
+                textureIdIdxWithMeshIdx.add(1) // texture idx 1 is linked to mesh idx 1
+            }
         }
 
         // Link the only child to the mesh

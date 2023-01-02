@@ -3,7 +3,7 @@ precision mediump float;
 // The kernel is a 3x3 matrix
 uniform float u_Kernel[9];
 
-uniform sampler2D u_TextureUnit;
+uniform sampler2D u_TextureUnit0;
 varying vec2 v_TextureCoordinates;
 
 void main() {
@@ -21,7 +21,7 @@ void main() {
     offsets[8] = vec2(offset, -offset); // bottom-right
     vec3 sampleTex[9];
     for (int i = 0; i < 9; i++) {
-        sampleTex[i] = vec3( texture2D(u_TextureUnit, v_TextureCoordinates.st + offsets[i]) );
+        sampleTex[i] = vec3( texture2D(u_TextureUnit0, v_TextureCoordinates.st + offsets[i]) );
     }
     vec3 col;
     for (int i = 0; i < 9; i++) {

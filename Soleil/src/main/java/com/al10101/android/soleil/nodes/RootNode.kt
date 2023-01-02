@@ -6,4 +6,7 @@ open class RootNode: Node() {
 
     var meshes: MutableList<Mesh> = mutableListOf()
 
+    var textureIds: MutableList<Int> = mutableListOf()
+    var textureIdIdxWithMeshIdx: MutableList<Int> = mutableListOf()
+
 }

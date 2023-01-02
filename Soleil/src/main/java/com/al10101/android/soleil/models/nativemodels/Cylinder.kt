@@ -14,12 +14,13 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 open class Cylinder @JvmOverloads constructor(
-    program: ShaderProgram,
     height: Float, slices: Int, radius: Float,
+    program: ShaderProgram,
     bottomCap: Boolean = true,
     topCap: Boolean = true,
     rgb: RGB = RGB.white,
     alpha: Float = 1f,
+    textureId: Int? = null,
     position: Vector = Vector.zero,
     rotation: Quaternion = Quaternion.upY,
     scale: Vector = Vector.one,
@@ -228,6 +229,20 @@ open class Cylinder @JvmOverloads constructor(
             meshes.add(it)
             meshIdxWithProgram.add(0) // index (mesh) 2 with program 0
             capCounter ++
+        }
+
+        // Add the same texture to the 3 meshes
+        textureId?.let {
+            textureIds.add(it)
+            textureIdIdxWithMeshIdx.add(0)  // texture idx 0 is linked to mesh idx 0
+            if (bottomCap) {
+                textureIds.add(it)
+                textureIdIdxWithMeshIdx.add(1)  // texture idx 1 is linked to mesh idx 1
+            }
+            if (topCap) {
+                textureIds.add(it)
+                textureIdIdxWithMeshIdx.add(capCounter)  // texture idx 2 is linked to mesh idx 2
+            }
         }
 
         // Link the only child to the mesh

@@ -7,7 +7,7 @@ uniform vec3 u_LightPosition[1];
 uniform vec3 u_LightColor[1];
 uniform vec3 u_LightSpecular[1];
 
-uniform sampler2D u_TextureUnit;
+uniform sampler2D u_ShadowTextureUnit;
 
 varying vec3 v_WorldPosition;
 varying vec3 v_WorldNormal;
@@ -20,7 +20,7 @@ float shadowCalc(float dotLightNormal) {
     if (pos.z > 1.0) {
         pos.z = 1.0;
     }
-    float depth = texture2D(u_TextureUnit, pos.xy).r;
+    float depth = texture2D(u_ShadowTextureUnit, pos.xy).r;
     // Bias to account for the stripe pattern due to imperfect resolution
     float bias = max(0.05 * (-1.0 + dotLightNormal), 0.005);
     return (depth + bias) < pos.z ? 0.0 : 1.0;

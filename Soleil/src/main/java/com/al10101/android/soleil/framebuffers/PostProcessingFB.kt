@@ -16,10 +16,9 @@ class PostProcessingFB(
     screenHeight: Int,
 ): FrameBuffer(postProgram, fbWidth, fbHeight, screenWidth, screenHeight) {
 
-    private val ndcQuad: Quad = Quad(postProgram, 2f, 2f)
-    private val ndcUniforms: Uniforms = Uniforms.normalizedDeviceCoordinates().apply {
-        textureIds = IntArray(1) // We will use 1 texture to link the fb to the quad
-    }
+    // Empty texture only to initialize list
+    private val ndcQuad: Quad = Quad(2f, 2f, postProgram, textureId=0)
+    private val ndcUniforms: Uniforms = Uniforms.normalizedDeviceCoordinates()
 
     init {
         onGenerate()
@@ -68,20 +67,19 @@ class PostProcessingFB(
         glBindFramebuffer(GL_FRAMEBUFFER, fbo[0])
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
         glEnable(GL_DEPTH_TEST)
-        glEnable(GL_BLEND)
 
         // Render all models
         models.forEach { it.onRender(uniforms) }
 
-        // Now that the rendering has been completed, we bind the texture to the uniforms
-        ndcUniforms.textureIds!![0] = texture[0]
+        // Now that the rendering has been completed, we bind the texture to the quad. The model
+        // has only 1 mesh and 1 texture, so we bind the computed texture to texture idx 0
+        ndcQuad.changeTextureInIdx(0, texture[0])
 
         // Reset state for the final post-processing rendering
         glViewport(0, 0, screenWidth, screenHeight)
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
         glClear(GL_COLOR_BUFFER_BIT)
         glDisable(GL_DEPTH_TEST)
-        glDisable(GL_BLEND)
 
         ndcQuad.onRender(ndcUniforms)
 

@@ -10,12 +10,13 @@ import com.al10101.android.soleil.nodes.ChildNode
 import com.al10101.android.soleil.programs.ShaderProgram
 
 open class Quad @JvmOverloads constructor(
-    program: ShaderProgram,
     width: Float, height: Float,
+    program: ShaderProgram,
     rgb: RGB = RGB.white,
     alpha: Float = 1f,
     clipS: Float = 0f,
     clipT: Float = 0f,
+    textureId: Int? = null,
     position: Vector = Vector.zero,
     rotation: Quaternion = Quaternion.upY,
     scale: Vector = Vector.one,
@@ -49,19 +50,19 @@ open class Quad @JvmOverloads constructor(
         // Also add the program to the model
         programs.add(program)
         meshIdxWithProgram.add(0) // <- The program nr. 0 is linked to the mesh with index nr. 0
-        // (it is the first element)
+
+        // Add the only texture to the only mesh
+        textureId?.let {
+            textureIds.add(it)
+            textureIdIdxWithMeshIdx.add(0)  // texture idx 0 is linked to mesh idx 0
+        }
 
         // Link the only child to the mesh
-        val childNode = ChildNode(position, rotation, scale).apply {
-            meshesIndices.add(0) // <- This child is linked to the mesh nr. 0
-        }
         children.add(
-            childNode
+            ChildNode(position, rotation, scale).apply {
+                meshesIndices.add(0) // <- This child is linked to the mesh nr. 0
+            }
         )
-
-    }
-
-    fun invertTextureCoordinates() {
 
     }
 

@@ -7,7 +7,6 @@ import com.al10101.android.soleil.R
 import com.al10101.android.soleil.data.Rectangle
 import com.al10101.android.soleil.data.Vector
 import com.al10101.android.soleil.models.Model
-import com.al10101.android.soleil.models.nativemodels.Quad
 import com.al10101.android.soleil.programs.ShaderProgram
 import com.al10101.android.soleil.uniforms.Camera
 import com.al10101.android.soleil.uniforms.Light
@@ -104,7 +103,7 @@ class ShadowMapFB(
         glEnable(GL_DEPTH_TEST)
 
         // With the rendering now completed, we bind the light space matrix and shadow textures
-        uniforms.textureIds!![0] = texture[0]
+        uniforms.shadowTextureId = texture[0]
         multiplyMM(uniforms.lightSpaceMatrix, 0, lightSpaceUniforms.projectionMatrix, 0, lightSpaceUniforms.viewMatrix, 0)
 
     }

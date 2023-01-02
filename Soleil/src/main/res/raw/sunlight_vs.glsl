@@ -13,7 +13,7 @@ varying vec4 v_Color;
 varying vec4 v_LightSpacePosition;
 
 void main() {
-    // Pass color, normal and position params
+    // Pass attributes params to the fragment shader
     v_WorldPosition = vec3(u_ModelMatrix * a_Position);
     v_WorldNormal = mat3(u_ModelMatrix) * a_Normal;
     v_Color = a_Color;

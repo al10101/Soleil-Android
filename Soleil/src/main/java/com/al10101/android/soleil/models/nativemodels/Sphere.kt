@@ -12,10 +12,11 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 open class Sphere @JvmOverloads constructor(
-    program: ShaderProgram,
     stacks: Int, slices: Int, radius: Float,
+    program: ShaderProgram,
     rgb: RGB = RGB.white,
     alpha: Float = 1f,
+    textureId: Int? = null,
     position: Vector = Vector.zero,
     rotation: Quaternion = Quaternion.upY,
     scale: Vector = Vector.one,
@@ -115,6 +116,12 @@ open class Sphere @JvmOverloads constructor(
         // Also add the program to the model
         programs.add(program)
         meshIdxWithProgram.add(0) // <- The only program is linked to the mesh nr. 0
+
+        // Add the only texture to the only mesh
+        textureId?.let {
+            textureIds.add(it)
+            textureIdIdxWithMeshIdx.add(0)  // texture idx 0 is linked to mesh idx 0
+        }
 
         // Link the only child to the mesh
         children.add(

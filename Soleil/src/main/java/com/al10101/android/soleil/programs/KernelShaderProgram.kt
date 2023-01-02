@@ -28,8 +28,8 @@ class KernelShaderProgram(
         glGetUniformLocation(program, U_KERNEL)
     }
 
-    override fun setUniforms(uniforms: Uniforms) {
-        super.setUniforms(uniforms)
+    override fun setUniforms(uniforms: Uniforms, textureIds: List<Int>) {
+        super.setUniforms(uniforms, textureIds)
         // Set kernel, a 3x3 matrix
         glUniform1fv(uKernelLocation, 9, kernel, 0)
     }

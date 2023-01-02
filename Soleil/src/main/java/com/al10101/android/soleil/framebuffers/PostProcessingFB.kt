@@ -14,11 +14,11 @@ class PostProcessingFB(
     fbHeight: Int,
     screenWidth: Int,
     screenHeight: Int,
-): FrameBuffer(postProgram, fbWidth, fbHeight, screenWidth, screenHeight) {
+): FrameBuffer(fbWidth, fbHeight, screenWidth, screenHeight) {
 
-    // Empty texture only to initialize list
-    private val ndcQuad: Quad = Quad(2f, 2f, postProgram, textureId=0)
-    private val ndcUniforms: Uniforms = Uniforms.normalizedDeviceCoordinates()
+    val ndcUniforms: Uniforms = Uniforms.normalizedDeviceCoordinates()
+    val ndcQuad: Quad = Quad(2f, 2f, postProgram, textureId=0) // Empty textureId
+    // only to initialize texture list inside the model
 
     init {
         onGenerate()
@@ -76,13 +76,14 @@ class PostProcessingFB(
         ndcQuad.changeTextureInIdx(0, texture[0])
 
         // Reset state for the final post-processing rendering
-        glViewport(0, 0, screenWidth, screenHeight)
-        glBindFramebuffer(GL_FRAMEBUFFER, 0)
-        glClear(GL_COLOR_BUFFER_BIT)
-        glDisable(GL_DEPTH_TEST)
+        unbindFrameBuffer()
 
+    }
+
+    fun quadAsList() = listOf(ndcQuad)
+
+    fun renderQuad() {
         ndcQuad.onRender(ndcUniforms)
-
     }
 
 }

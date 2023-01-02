@@ -5,6 +5,7 @@ import android.opengl.GLES20.*
 import android.opengl.GLSurfaceView
 import com.al10101.android.soleil.data.Quaternion
 import com.al10101.android.soleil.data.RGB
+import com.al10101.android.soleil.data.Rectangle
 import com.al10101.android.soleil.data.Vector
 import com.al10101.android.soleil.extensions.loadTexture
 import com.al10101.android.soleil.extensions.rotateY
@@ -29,8 +30,10 @@ class FiguresRenderer(private val context: Context): GLSurfaceView.Renderer {
     private lateinit var models: List<Model>
     private lateinit var uniforms: Uniforms
 
-    private lateinit var postProcessingFB: PostProcessingFB
     private lateinit var shadowMapFB: ShadowMapFB
+
+    private lateinit var inversionFB: PostProcessingFB
+    private lateinit var blurFB: PostProcessingFB
 
     private var globalStartTime: Long = 0
 
@@ -135,10 +138,7 @@ class FiguresRenderer(private val context: Context): GLSurfaceView.Renderer {
         }
 
         val sunlight = Light(position=Vector(20f, 15f, 10f))
-        val lightArray = LightArray.unrollLights(
-            listOf(sunlight)
-        )
-
+        val lightArray = LightArray( listOf(sunlight) )
         uniforms = Uniforms(
             FloatArray(16), // empty model matrix
             camera.viewMatrix,
@@ -147,10 +147,33 @@ class FiguresRenderer(private val context: Context): GLSurfaceView.Renderer {
             lightArray
         )
 
-        shadowMapFB = ShadowMapFB(context, width*2, height*2, width, height, sunlight)
-        postProcessingFB = PostProcessingFB(
-            KernelShaderProgram.defaultKernel(context, KernelType.PSYCHEDELIC),
-            //ShaderProgram(context, R.raw.simple_texture_vs, R.raw.post_inversion),
+        val lightCamera = Camera(
+            position = sunlight.position,
+            center = Vector.zero,
+            up = Vector.unitaryY,
+            near = 1f,
+            far = 50f
+        ).apply {
+            setViewMatrix()
+            setOrthographicProjectionMatrix(
+                Rectangle(-10f, 10f, -10f, 10f)
+            )
+        }
+        val lightSpaceUniforms = Uniforms(
+            FloatArray(16), // empty model matrix
+            lightCamera.viewMatrix,
+            lightCamera.projectionMatrix,
+            lightCamera.position
+        )
+        shadowMapFB = ShadowMapFB(context, width*2, height*2, width, height, lightSpaceUniforms)
+
+        inversionFB = PostProcessingFB(
+            ShaderProgram(context, R.raw.simple_texture_vs, R.raw.post_inversion),
+            width, height, width, height
+        )
+
+        blurFB = PostProcessingFB(
+            KernelShaderProgram.defaultKernel(context, KernelType.GAUSSIAN_BLUR),
             width, height, width, height
         )
 
@@ -173,7 +196,15 @@ class FiguresRenderer(private val context: Context): GLSurfaceView.Renderer {
         val delta = 25f
         if (angle in (90f-delta)..(270f+delta)) {
             // Render with post-processing effects
-            postProcessingFB.onRender(models, uniforms)
+            blurFB.onRender(models, uniforms)
+            if (angle in (180-delta)..(180+delta)) {
+                // Now that the first effect was made, pass it to the second effect and render
+                inversionFB.onRender(blurFB.quadAsList(), blurFB.ndcUniforms)
+                inversionFB.renderQuad()
+            } else {
+                // Only render the first effect
+                blurFB.renderQuad()
+            }
         } else {
             // Render normally
             models.forEach { it.onRender(uniforms) }

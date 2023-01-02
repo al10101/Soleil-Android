@@ -4,12 +4,8 @@ import android.content.Context
 import android.opengl.GLES20.*
 import android.opengl.Matrix.multiplyMM
 import com.al10101.android.soleil.R
-import com.al10101.android.soleil.data.Rectangle
-import com.al10101.android.soleil.data.Vector
 import com.al10101.android.soleil.models.Model
 import com.al10101.android.soleil.programs.ShaderProgram
-import com.al10101.android.soleil.uniforms.Camera
-import com.al10101.android.soleil.uniforms.Light
 import com.al10101.android.soleil.uniforms.Uniforms
 
 class ShadowMapFB(
@@ -18,36 +14,13 @@ class ShadowMapFB(
     fbHeight: Int,
     screenWidth: Int,
     screenHeight: Int,
-    sunlight: Light
-): FrameBuffer(
-    ShaderProgram(context, R.raw.simple_texture_vs, R.raw.blank_fs),
-    fbWidth, fbHeight, screenWidth, screenHeight
-) {
+    val lightSpaceUniforms: Uniforms
+): FrameBuffer(fbWidth, fbHeight, screenWidth, screenHeight) {
 
     private val shadowProgram = ShaderProgram(context,
         R.raw.simple_texture_vs,
         R.raw.blank_fs
     )
-
-    private val lightSpaceUniforms: Uniforms =
-        Camera(
-            position = sunlight.position,
-            center = Vector.zero,
-            up = Vector.unitaryY,
-            near = 1f,
-            far = 50f
-        ).let {
-            it.setViewMatrix()
-            it.setOrthographicProjectionMatrix(
-                Rectangle(-10f, 10f, -10f, 10f)
-            )
-            Uniforms(
-                FloatArray(16), // empty model matrix
-                it.viewMatrix,
-                it.projectionMatrix,
-                it.position
-            )
-        }
 
     init {
         onGenerate()
@@ -96,16 +69,14 @@ class ShadowMapFB(
             it.onRenderWithProgram(shadowProgram, lightSpaceUniforms)
         }
 
-        // Reset everything back to normal
-        glViewport(0, 0, screenWidth, screenHeight)
-        glBindFramebuffer(GL_FRAMEBUFFER, 0)
-        glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
-        glEnable(GL_DEPTH_TEST)
-
         // With the rendering now completed, we bind the light space matrix and shadow textures
         uniforms.shadowTextureId = texture[0]
         multiplyMM(uniforms.lightSpaceMatrix, 0, lightSpaceUniforms.projectionMatrix, 0, lightSpaceUniforms.viewMatrix, 0)
 
+        // Reset everything back to normal
+        unbindFrameBuffer()
+
     }
+
 
 }

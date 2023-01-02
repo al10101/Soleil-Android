@@ -11,8 +11,8 @@ open class Model(
     override val name: String
 ): RootNode(), Renderable {
 
-    var programs: MutableList<ShaderProgram> = mutableListOf()
-    var meshIdxWithProgram: MutableList<Int> = mutableListOf()
+    val programs: MutableList<ShaderProgram> = mutableListOf()
+    val meshIdxWithProgram: MutableList<Int> = mutableListOf()
 
     // meshIdxWithProgram -> {
     // index0<Mesh> works with value0<Program>

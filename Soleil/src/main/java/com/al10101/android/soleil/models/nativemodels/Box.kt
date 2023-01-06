@@ -108,7 +108,7 @@ open class Box @JvmOverloads constructor(
         }
 
         // Link the only children to the mesh
-        children.add(
+        super.add(
             ChildNode(position, rotation, scale).apply {
                 // This child has all the 6 meshes
                 for (i in 0 until 6) {

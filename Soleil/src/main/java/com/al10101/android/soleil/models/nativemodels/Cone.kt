@@ -193,7 +193,7 @@ open class Cone @JvmOverloads constructor(
         }
 
         // Link the only child to the mesh
-        children.add(
+        super.add(
             ChildNode(position, rotation, scale).apply {
                 meshesIndices.add(0) // This child is linked to the mesh nr. 0
                 if (cap) { meshesIndices.add(1) } // This child is linked to the mesh nr. 1

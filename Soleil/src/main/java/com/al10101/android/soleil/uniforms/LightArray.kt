@@ -4,6 +4,9 @@ import com.al10101.android.soleil.data.Vector
 
 class LightArray(lights: List<Light>) {
 
+    // In a lot of cases, we will only use 1 light anyway
+    constructor(light: Light): this( listOf(light) )
+
     val size = lights.size
     val lightPositions = FloatArray(size * 3)
     val lightColors = FloatArray(size * 3)

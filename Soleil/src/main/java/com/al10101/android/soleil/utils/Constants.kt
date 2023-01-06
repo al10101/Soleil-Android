@@ -11,6 +11,7 @@ const val FRAME_RATE_TAG = "SoleilFrameRateTag"
 const val CONTEXT_EXT_TAG = "SoleilContextExtTag"
 const val MODELS_TAG  = "SoleilModelsTag"
 const val FRAME_BUFFERS_TAG = "SoleilFrameBuffers"
+const val CONTROLS_TAG = "SoleilControlsTag"
 
 // Counters
 const val BYTES_PER_FLOAT = 4

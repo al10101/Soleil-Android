@@ -20,7 +20,7 @@ class RGB(
             newA.r + newB.r,
             newA.g + newB.g,
             newA.b + newB.b
-        )
+        ).scale(1f / sum)
     }
 
     companion object {

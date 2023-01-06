@@ -52,6 +52,13 @@ fun FloatArray.y() = this[1]
 fun FloatArray.z() = this[2]
 fun FloatArray.w() = this[3]
 
+// 4 vector
+fun FloatArray.divideByW() {
+    this[0] /= this[3]
+    this[1] /= this[3]
+    this[2] /= this[3]
+}
+
 // 3 vector
 fun FloatArray.xy() = floatArrayOf(this[0], this[1])
 fun FloatArray.yz() = floatArrayOf(this[1], this[2])

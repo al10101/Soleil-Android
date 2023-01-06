@@ -6,19 +6,23 @@ import com.al10101.android.soleil.models.Model
 import com.al10101.android.soleil.models.nativemodels.Quad
 import com.al10101.android.soleil.programs.ShaderProgram
 import com.al10101.android.soleil.uniforms.Uniforms
-import com.al10101.android.soleil.utils.MODELS_TAG
+import com.al10101.android.soleil.utils.FRAME_BUFFERS_TAG
 
 class PostProcessingFB(
-    postProgram: ShaderProgram,
+    shaderProgram: ShaderProgram,
     fbWidth: Int,
     fbHeight: Int,
     screenWidth: Int,
     screenHeight: Int,
-): FrameBuffer(fbWidth, fbHeight, screenWidth, screenHeight) {
+): FrameBuffer(shaderProgram, fbWidth, fbHeight, screenWidth, screenHeight) {
 
     val ndcUniforms: Uniforms = Uniforms.normalizedDeviceCoordinates()
-    val ndcQuad: Quad = Quad(2f, 2f, postProgram, textureId=0) // Empty textureId
-    // only to initialize texture list inside the model
+    private val ndcQuad: Quad = Quad(2f, 2f,
+        // Only to use the empty space, because the rendering occurs with the super.shaderProgram
+        program = shaderProgram,
+        // Empty textureId to initialize texture list inside model
+        textureId = 0
+    )
 
     init {
         onGenerate()
@@ -54,7 +58,7 @@ class PostProcessingFB(
 
         // Unbind framebuffer to make sure we are not accidentally rendering to the wrong buffer
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-            Log.e(MODELS_TAG, "FRAMEBUFFER: Framebuffer is not complete!")
+            Log.e(FRAME_BUFFERS_TAG, "FRAMEBUFFER: Framebuffer is not complete!")
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
@@ -73,7 +77,7 @@ class PostProcessingFB(
 
         // Now that the rendering has been completed, we bind the texture to the quad. The model
         // has only 1 mesh and 1 texture, so we bind the computed texture to texture idx 0
-        ndcQuad.changeTextureInIdx(0, texture[0])
+        ndcQuad.changeTextureAtIdx(0, texture[0])
 
         // Reset state for the final post-processing rendering
         unbindFrameBuffer()
@@ -83,7 +87,7 @@ class PostProcessingFB(
     fun quadAsList() = listOf(ndcQuad)
 
     fun renderQuad() {
-        ndcQuad.onRender(ndcUniforms)
+        ndcQuad.onRenderWithProgram(shaderProgram, ndcUniforms)
     }
 
 }

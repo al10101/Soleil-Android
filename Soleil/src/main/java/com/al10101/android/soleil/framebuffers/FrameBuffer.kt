@@ -6,6 +6,7 @@ import com.al10101.android.soleil.programs.ShaderProgram
 import com.al10101.android.soleil.uniforms.Uniforms
 
 open class FrameBuffer(
+    var shaderProgram: ShaderProgram,
     val fbWidth: Int,
     val fbHeight: Int,
     val screenWidth: Int,

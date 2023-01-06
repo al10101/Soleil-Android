@@ -15,12 +15,10 @@ class ShadowMapFB(
     screenWidth: Int,
     screenHeight: Int,
     val lightSpaceUniforms: Uniforms
-): FrameBuffer(fbWidth, fbHeight, screenWidth, screenHeight) {
-
-    private val shadowProgram = ShaderProgram(context,
-        R.raw.simple_texture_vs,
-        R.raw.blank_fs
-    )
+): FrameBuffer(
+    ShaderProgram(context, R.raw.simple_texture_vs, R.raw.blank_fs),
+    fbWidth, fbHeight, screenWidth, screenHeight
+) {
 
     init {
         onGenerate()
@@ -66,7 +64,7 @@ class ShadowMapFB(
         // global model matrix
         lightSpaceUniforms.modelMatrix = uniforms.modelMatrix.copyOf()
         models.forEach {
-            it.onRenderWithProgram(shadowProgram, lightSpaceUniforms)
+            it.onRenderWithProgram(shaderProgram, lightSpaceUniforms)
         }
 
         // With the rendering now completed, we bind the light space matrix and shadow textures

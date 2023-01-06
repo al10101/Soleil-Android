@@ -83,6 +83,7 @@ open class ShaderProgram(
         // Set up the camera position
         glUniform3fv(uCameraPosition, 1, uniforms.cameraPosition.toFloatArray(), 0)
         // Set up all the textures
+        glBindTexture(GL_TEXTURE_2D, 0)
         textureIds.forEachIndexed { i, it ->
             glActiveTexture(GL_TEXTURE1 + i) // excluding TEXTURE0, it is reserved for the shadow
             glBindTexture(GL_TEXTURE_2D, it)

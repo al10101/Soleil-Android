@@ -17,7 +17,7 @@ enum class KernelType {
 
 class KernelShaderProgram(
     context: Context,
-    private val kernel: FloatArray
+    val kernel: FloatArray
 ): ShaderProgram(
     context,
     R.raw.simple_texture_vs,

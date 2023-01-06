@@ -1,11 +1,10 @@
 package com.al10101.android.soleil.data
 
-import android.util.FloatMath
 import kotlin.math.max
 import kotlin.math.sqrt
 import kotlin.random.Random
 
-class Vector(
+data class Vector(
     var x: Float,
     var y: Float,
     var z: Float
@@ -82,9 +81,9 @@ class Vector(
     companion object {
         val zero = Vector(0f, 0f, 0f)
         val one = Vector(1f, 1f, 1f)
-        val unitaryX = Vector(1f, 0f, 0f)
-        val unitaryY = Vector(0f, 1f, 0f)
-        val unitaryZ = Vector(0f, 0f, 1f)
+        val unitX = Vector(1f, 0f, 0f)
+        val unitY = Vector(0f, 1f, 0f)
+        val unitZ = Vector(0f, 0f, 1f)
         fun random(random: Random) = Vector(
             random.nextFloat(),
             random.nextFloat(),
@@ -107,8 +106,39 @@ data class Quaternion(
 ) {
     companion object {
         val upY = Quaternion(
-            Vector.unitaryY,
-            Vector.unitaryY
+            Vector.unitY,
+            Vector.unitY
         )
     }
 }
+
+data class Ray(
+    val origin: Vector,
+    val direction: Vector
+) {
+    fun distanceBetween(vector: Vector): Float {
+        val p1ToOrigin = vector.sub(origin)
+        val p2ToOrigin = vector.sub(origin.add(direction))
+        // The length of the cross product gives the area of an imaginary
+        // parallelogram having the two vectors as sides
+        val areaOfTriangleTimesTwo = p1ToOrigin.cross(p2ToOrigin).length()
+        val lengthOfBase = direction.length()
+        // The area of a triangle is also equal to (base * height) / 2. In
+        // other words, the height is equal to (area * 2) / base. The height
+        // of this triangle is the distance from the point to the ray
+        return areaOfTriangleTimesTwo / lengthOfBase
+    }
+    // This also treats rays as if they were infinite. It will return a
+    // point full of NaNs if there is no intersection point
+    fun intersectionPointWith(plane: Plane): Vector {
+        val rayToPlaneVector = plane.position.sub(origin)
+        val scaleFactor = rayToPlaneVector.dot(plane.normal) /
+                direction.dot(plane.normal)
+        return origin.add(direction.mul(scaleFactor))
+    }
+}
+
+data class Plane(
+    val position: Vector,
+    val normal: Vector
+)

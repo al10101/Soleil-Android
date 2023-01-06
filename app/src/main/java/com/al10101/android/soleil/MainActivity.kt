@@ -3,6 +3,7 @@ package com.al10101.android.soleil
 import android.opengl.GLSurfaceView
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import com.al10101.android.soleil.custom.TouchableGLView
 
 class MainActivity: AppCompatActivity() {
 
@@ -12,9 +13,9 @@ class MainActivity: AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        glView = GLSurfaceView(this)
+        glView = TouchableGLView(this)
         glView.setEGLContextClientVersion(2)
-        glView.setRenderer(FiguresRenderer(this))
+        glView.setRenderer(SnowmanRenderer(this))
         rendererSet = true
 
         setContentView(glView)

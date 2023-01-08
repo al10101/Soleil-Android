@@ -40,7 +40,7 @@ open class Model(
         }
     }
 
-    fun storeNewPosition(modelMatrix: FloatArray) {
+    fun overwriteModelMatrix(modelMatrix: FloatArray) {
         super.setNewModelMatrixForEveryChild(temp, modelMatrix)
     }
 

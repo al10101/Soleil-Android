@@ -28,6 +28,7 @@ class RGB(
         val black = RGB(0f, 0f, 0f)
         val red = RGB(1f, 0f, 0f)
         val green = RGB(0f, 1f, 0f)
+        val eyeSensibleGreen = RGB(0.2126f, 0.7152f, 0.0722f)
         val blue = RGB(0f, 0f, 1f)
         val yellow = RGB(1f, 1f, 0f)
         val magenta = RGB(1f, 0f, 1f)

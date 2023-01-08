@@ -66,6 +66,12 @@ data class Vector(
         x * other.y - y * other.x,
     )
 
+    fun pointWise(other: Vector) = Vector(
+        x * other.x,
+        y * other.y,
+        z * other.z
+    )
+
     fun normalize(): Vector {
         val length = length()
         return Vector(x / length, y / length, z / length)

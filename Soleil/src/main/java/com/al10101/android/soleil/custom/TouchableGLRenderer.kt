@@ -2,7 +2,6 @@ package com.al10101.android.soleil.custom
 
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix.multiplyMV
-import android.util.Log
 import android.view.MotionEvent
 import com.al10101.android.soleil.data.Plane
 import com.al10101.android.soleil.data.Quaternion
@@ -15,7 +14,6 @@ import com.al10101.android.soleil.extensions.toVector
 import com.al10101.android.soleil.models.Model
 import com.al10101.android.soleil.uniforms.Camera
 import com.al10101.android.soleil.uniforms.Uniforms
-import com.al10101.android.soleil.utils.CONTROLS_TAG
 
 interface TouchableGLRenderer: GLSurfaceView.Renderer {
 
@@ -35,6 +33,9 @@ interface TouchableGLRenderer: GLSurfaceView.Renderer {
     }
 
     fun handleZoomPress(ev: MotionEvent, firstPointerId: Int, secondPointerId: Int) {
+        // If the event happens too fast and one of the fingers is not registered
+        // correctly, the zoom operation must be cancelled
+        if (ev.pointerCount == 1) { return }
         controls.oldDist = spacing(ev, firstPointerId, secondPointerId)
         // Define the mid point
         val firstTouchVector = retrieveEventAsVector(ev, firstPointerId)
@@ -61,12 +62,12 @@ interface TouchableGLRenderer: GLSurfaceView.Renderer {
     }
 
     fun handleZoomCamera(ev: MotionEvent, firstPointerId: Int, secondPointerId: Int): Boolean {
+        // If the event happens too fast and one of the fingers is not registered
+        // correctly, the zoom operation must be cancelled
+        if (ev.pointerCount == 1) { return false }
         // Boundaries for the operation
         val minFov = 5f
         val maxFov = 120f
-        // Compute new movement considering the previous one. If the event happens too fast and
-        // one of the fingers is not registered correctly, the zoom operation must be cancelled
-        if (ev.pointerCount == 1) { return false }
         val newDist = spacing(ev, firstPointerId, secondPointerId)
         val zoom = controls.oldDist / newDist
         controls.currentFov = controls.startFov * zoom
@@ -83,7 +84,7 @@ interface TouchableGLRenderer: GLSurfaceView.Renderer {
 
     fun stopMovement(ev: MotionEvent) {
         // Set the final rotation as the default model matrix for every model
-        models.forEach { it.storeNewPosition(controls.rotationMatrix) }
+        models.forEach { it.overwriteModelMatrix(controls.rotationMatrix) }
         // Set identity so it doesn't apply anymore
         controls.rotationMatrix.identity()
     }

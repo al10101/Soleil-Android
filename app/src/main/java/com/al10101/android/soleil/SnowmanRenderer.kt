@@ -18,6 +18,7 @@ import com.al10101.android.soleil.uniforms.Camera
 import com.al10101.android.soleil.uniforms.Light
 import com.al10101.android.soleil.uniforms.LightArray
 import com.al10101.android.soleil.uniforms.Uniforms
+import com.al10101.android.soleil.utils.FrameRate.limitFrameRate
 import com.al10101.android.soleil.utils.FrameRate.logFrameRate
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
@@ -98,6 +99,7 @@ class SnowmanRenderer(private val context: Context): TouchableGLRenderer {
     }
 
     override fun onDrawFrame(p0: GL10?) {
+        limitFrameRate(15)
         logFrameRate(TAG)
 
         // Move the whole scene

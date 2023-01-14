@@ -7,6 +7,7 @@ import android.opengl.Matrix.multiplyMV
 import android.util.Log
 import com.al10101.android.soleil.custom.Controls
 import com.al10101.android.soleil.custom.TouchableGLRenderer
+import com.al10101.android.soleil.custom.ZoomModes
 import com.al10101.android.soleil.data.Quaternion
 import com.al10101.android.soleil.data.RGB
 import com.al10101.android.soleil.data.Rectangle
@@ -37,6 +38,7 @@ class CursedRoomRenderer(private val context: Context): TouchableGLRenderer {
     override lateinit var controls: Controls
     override lateinit var camera: Camera
     override lateinit var uniforms: Uniforms
+    override var zoomMode: ZoomModes = ZoomModes.TRANSLATION
     override var maxNorm: Float = 0f
 
     private lateinit var shadowMapFB: ShadowMapFB
@@ -139,7 +141,7 @@ class CursedRoomRenderer(private val context: Context): TouchableGLRenderer {
         controls = Controls()
         camera = Camera(
             position = Vector(0f, 4f, 12f),
-            center = Vector(0f, 2f, 0f),
+            center = Vector(0f, 0f, -maxNorm),
             aspect = ratio,
             fovy = 45f,
             near = 0.1f,

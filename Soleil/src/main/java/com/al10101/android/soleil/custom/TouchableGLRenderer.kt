@@ -2,6 +2,7 @@ package com.al10101.android.soleil.custom
 
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix.multiplyMV
+import android.util.Log
 import android.view.MotionEvent
 import com.al10101.android.soleil.data.Plane
 import com.al10101.android.soleil.data.Quaternion
@@ -17,6 +18,7 @@ import com.al10101.android.soleil.uniforms.Uniforms
 
 interface TouchableGLRenderer: GLSurfaceView.Renderer {
 
+    var zoomMode: ZoomModes
     var models: MutableList<Model>
     var controls: Controls
     var camera: Camera
@@ -42,6 +44,7 @@ interface TouchableGLRenderer: GLSurfaceView.Renderer {
         val secondTouchVector = retrieveEventAsVector(ev, secondPointerId)
         controls.midTouch = firstTouchVector.add(secondTouchVector).mul(0.5f)
         controls.startFov = camera.fovy
+        controls.startPosZ = camera.position.z
         controls.previousTouch.x = controls.midTouch.x
         controls.previousTouch.y = controls.midTouch.y
         controls.currentTouch.x = controls.midTouch.x
@@ -68,18 +71,34 @@ interface TouchableGLRenderer: GLSurfaceView.Renderer {
         // Boundaries for the operation
         val minFov = 5f
         val maxFov = 120f
+        val minZ = camera.near + maxNorm * 0.5f
+        val maxZ = camera.far - maxNorm
         val newDist = spacing(ev, firstPointerId, secondPointerId)
         val zoom = controls.oldDist / newDist
         controls.currentFov = controls.startFov * zoom
+        controls.currentPosZ = controls.startPosZ * zoom
         controls.previousTouch.x = controls.midTouch.x
         controls.previousTouch.y = controls.midTouch.y
-        return if (controls.currentFov in minFov..maxFov) {
-            camera.fovy = controls.currentFov
-            setClipping()
-            true
-        } else {
-            false
+        return when (zoomMode) {
+            ZoomModes.PERSPECTIVE ->
+                if (controls.currentFov in minFov..maxFov) {
+                    camera.fovy = controls.currentFov
+                    setClipping()
+                    true
+                } else {
+                    false
+                }
+            ZoomModes.TRANSLATION ->
+                if (controls.currentPosZ in minZ..maxZ) {
+                    camera.position.z = controls.currentPosZ
+                    Log.d("CursedRoomRenderer", "handleZoomCamera: zoom=$zoom <${camera.position.z}) -> (${camera.center.z}))")
+                    setClipping()
+                    true
+                } else {
+                    false
+                }
         }
+
     }
 
     fun stopMovement(ev: MotionEvent) {

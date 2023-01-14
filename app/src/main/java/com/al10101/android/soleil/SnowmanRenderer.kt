@@ -4,6 +4,7 @@ import android.content.Context
 import android.opengl.GLES20.*
 import com.al10101.android.soleil.custom.Controls
 import com.al10101.android.soleil.custom.TouchableGLRenderer
+import com.al10101.android.soleil.custom.ZoomModes
 import com.al10101.android.soleil.data.Quaternion
 import com.al10101.android.soleil.data.RGB
 import com.al10101.android.soleil.data.Vector
@@ -31,6 +32,7 @@ class SnowmanRenderer(private val context: Context): TouchableGLRenderer {
     override lateinit var controls: Controls
     override lateinit var models: MutableList<Model>
     override lateinit var uniforms: Uniforms
+    override var zoomMode: ZoomModes = ZoomModes.PERSPECTIVE
     override var maxNorm: Float = 0f
 
     private var globalStartTime: Long = 0

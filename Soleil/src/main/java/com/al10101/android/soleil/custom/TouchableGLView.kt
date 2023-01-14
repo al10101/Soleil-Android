@@ -21,7 +21,7 @@ open class TouchableGLView(context: Context): GLSurfaceView(context) {
             touchableGLRenderer = renderer
             super.setRenderer(touchableGLRenderer)
         } else {
-            throw RuntimeException("CustomGLView can only render CustomGLRenderer")
+            throw RuntimeException("SoleilGLView can only render SoleilGLRenderer")
         }
     }
 

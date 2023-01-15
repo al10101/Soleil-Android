@@ -2,6 +2,7 @@ package com.al10101.android.soleil.custom
 
 import android.content.Context
 import android.opengl.GLSurfaceView
+import android.util.Log
 import android.view.MotionEvent
 
 open class TouchableGLView(context: Context): GLSurfaceView(context) {
@@ -58,6 +59,7 @@ open class TouchableGLView(context: Context): GLSurfaceView(context) {
                         touchableGLRenderer.handleTouchDragToRotate(normalizedX, normalizedY)
                     }
                 } else if (gesture == GestureTypes.ZOOM) {
+                    Log.d("CursedRoomRenderer", "onTouchEvent: firstPointer= $firstPointerId  secondPointer= $secondPointerId")
                     queueEvent {
                         consumed = touchableGLRenderer.handleZoomCamera(ev, firstPointerId, secondPointerId)
                     }

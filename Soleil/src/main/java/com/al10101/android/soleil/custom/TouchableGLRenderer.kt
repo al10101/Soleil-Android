@@ -35,13 +35,11 @@ interface TouchableGLRenderer: GLSurfaceView.Renderer {
     }
 
     fun handleZoomPress(ev: MotionEvent, firstPointerId: Int, secondPointerId: Int) {
-        // If the event happens too fast and one of the fingers is not registered
-        // correctly, the zoom operation must be cancelled
-        if (ev.pointerCount == 1) { return }
-        controls.oldDist = spacing(ev, firstPointerId, secondPointerId)
+        // If the event is not registered correctly, the zoom operation must be cancelled
+        controls.oldDist = spacing(ev, firstPointerId, secondPointerId) ?: return
         // Define the mid point
-        val firstTouchVector = retrieveEventAsVector(ev, firstPointerId)
-        val secondTouchVector = retrieveEventAsVector(ev, secondPointerId)
+        val firstTouchVector = retrieveEventAsVector(ev, firstPointerId) ?: return
+        val secondTouchVector = retrieveEventAsVector(ev, secondPointerId) ?: return
         controls.midTouch = firstTouchVector.add(secondTouchVector).mul(0.5f)
         controls.startFov = camera.fovy
         controls.startPosZ = camera.position.z
@@ -65,15 +63,13 @@ interface TouchableGLRenderer: GLSurfaceView.Renderer {
     }
 
     fun handleZoomCamera(ev: MotionEvent, firstPointerId: Int, secondPointerId: Int): Boolean {
-        // If the event happens too fast and one of the fingers is not registered
-        // correctly, the zoom operation must be cancelled
-        if (ev.pointerCount == 1) { return false }
         // Boundaries for the operation
         val minFov = 5f
         val maxFov = 120f
         val minZ = camera.near + maxNorm * 0.5f
         val maxZ = camera.far - maxNorm
-        val newDist = spacing(ev, firstPointerId, secondPointerId)
+        // If the event is not registered correctly, the zoom operation must be cancelled
+        val newDist = spacing(ev, firstPointerId, secondPointerId) ?: return false
         val zoom = controls.oldDist / newDist
         controls.currentFov = controls.startFov * zoom
         controls.currentPosZ = controls.startPosZ * zoom
@@ -91,7 +87,6 @@ interface TouchableGLRenderer: GLSurfaceView.Renderer {
             ZoomModes.TRANSLATION ->
                 if (controls.currentPosZ in minZ..maxZ) {
                     camera.position.z = controls.currentPosZ
-                    Log.d("CursedRoomRenderer", "handleZoomCamera: zoom=$zoom <${camera.position.z}) -> (${camera.center.z}))")
                     setClipping()
                     true
                 } else {
@@ -142,17 +137,22 @@ interface TouchableGLRenderer: GLSurfaceView.Renderer {
 
     }
 
-    private fun spacing(ev: MotionEvent, firstPointerId: Int, secondPointerId: Int): Float {
-        // Get both touches
-        val firstTouchVector = retrieveEventAsVector(ev, firstPointerId)
-        val secondTouchVector = retrieveEventAsVector(ev, secondPointerId)
+    private fun spacing(ev: MotionEvent, firstPointerId: Int, secondPointerId: Int): Float? {
+        // Get both touches. If a problem is found during the process, return null
+        val firstTouchVector = retrieveEventAsVector(ev, firstPointerId) ?: return null
+        val secondTouchVector = retrieveEventAsVector(ev, secondPointerId) ?: return null
         val diff = firstTouchVector.sub(secondTouchVector)
         return diff.length()
     }
 
-    private fun retrieveEventAsVector(ev: MotionEvent, pointerId: Int): Vector {
+    private fun retrieveEventAsVector(ev: MotionEvent, pointerId: Int): Vector? {
         val (touchEventX: Float, touchEventY: Float) = ev.findPointerIndex(pointerId).let {
-            ev.getX(it) to ev.getY(it)
+            try {
+                ev.getX(it) to ev.getY(it)
+            } catch (e: IllegalArgumentException) {
+                // If, for any reason, the pointer is not found in the event, return null
+                return null
+            }
         }
         return Vector(touchEventX, touchEventY, 0f)
     }

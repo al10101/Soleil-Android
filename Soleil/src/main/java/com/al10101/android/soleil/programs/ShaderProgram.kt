@@ -6,18 +6,18 @@ import com.al10101.android.soleil.uniforms.Uniforms
 import com.al10101.android.soleil.extensions.readTextFileFromResource
 import com.al10101.android.soleil.utils.ShaderUtils
 
-const val U_PROJECTION_MATRIX = "u_ProjectionMatrix"
-const val U_VIEW_MATRIX = "u_ViewMatrix"
-const val U_MODEL_MATRIX = "u_ModelMatrix"
+private const val U_PROJECTION_MATRIX = "u_ProjectionMatrix"
+private const val U_VIEW_MATRIX = "u_ViewMatrix"
+private const val U_MODEL_MATRIX = "u_ModelMatrix"
 
-const val U_TEXTURE_UNIT = "u_TextureUnit"
+private const val U_TEXTURE_UNIT = "u_TextureUnit"
 
-const val U_CAMERA_POSITION = "u_CameraPosition"
+private const val U_CAMERA_POSITION = "u_CameraPosition"
 
-const val A_POSITION = "a_Position"
-const val A_COLOR = "a_Color"
-const val A_NORMAL = "a_Normal"
-const val A_TEXTURE_COORDINATES = "a_TextureCoordinates"
+private const val A_POSITION = "a_Position"
+private const val A_COLOR = "a_Color"
+private const val A_NORMAL = "a_Normal"
+private const val A_TEXTURE_COORDINATES = "a_TextureCoordinates"
 
 open class ShaderProgram(
     context: Context,

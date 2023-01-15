@@ -5,16 +5,15 @@ import android.opengl.GLES20.*
 import com.al10101.android.soleil.R
 import com.al10101.android.soleil.uniforms.Uniforms
 
-const val U_LIGHT_SPACE_MATRIX = "u_LightSpaceMatrix"
-
-
-
-const val U_SHADOW_TEXTURE_UNIT = "u_ShadowTextureUnit"
+private const val U_LIGHT_SPACE_MATRIX = "u_LightSpaceMatrix"
+private const val U_SHADOW_TEXTURE_UNIT = "u_ShadowTextureUnit"
 
 class SunlightShaderProgram(
-    context: Context
-): LightingShaderProgram(
+    context: Context,
+    materialShininess: Float
+): PhongShaderProgram(
     context,
+    materialShininess,
     R.raw.sunlight_vs,
     R.raw.sunlight_fs
 ) {

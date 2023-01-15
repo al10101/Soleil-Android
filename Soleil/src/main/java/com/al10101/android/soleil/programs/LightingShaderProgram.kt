@@ -4,12 +4,12 @@ import android.content.Context
 import android.opengl.GLES20.*
 import com.al10101.android.soleil.uniforms.Uniforms
 
-const val U_LIGHT_POSITION = "u_LightPosition"
-const val U_LIGHT_COLOR = "u_LightColor"
-const val U_LIGHT_SPECULAR = "u_LightSpecular"
-const val U_LIGHT_INTENSITY = "u_LightIntensity"
-const val U_LIGHT_ATTENUATION = "u_LightAttenuation"
-const val U_LIGHT_TYPE = "u_LightType"
+private const val U_LIGHT_POSITION = "u_LightPosition"
+private const val U_LIGHT_COLOR = "u_LightColor"
+private const val U_LIGHT_SPECULAR = "u_LightSpecular"
+private const val U_LIGHT_INTENSITY = "u_LightIntensity"
+private const val U_LIGHT_ATTENUATION = "u_LightAttenuation"
+private const val U_LIGHT_TYPE = "u_LightType"
 
 open class LightingShaderProgram(
     context: Context,

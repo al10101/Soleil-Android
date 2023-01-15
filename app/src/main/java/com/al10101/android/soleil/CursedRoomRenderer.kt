@@ -64,7 +64,7 @@ class CursedRoomRenderer(private val context: Context): TouchableGLRenderer {
         val bgColor = RGB.grayScale(0.1f)
         glClearColor(bgColor.r, bgColor.g, bgColor.b, 1f)
 
-        val sunlightProgram = SunlightShaderProgram(context)
+        val sunlightProgram = SunlightShaderProgram(context, 24f)
 
         val textureProgram = SimpleTextureShaderProgram(context)
         val textureId = context.loadTexture(R.drawable.old_obunga)
@@ -153,7 +153,10 @@ class CursedRoomRenderer(private val context: Context): TouchableGLRenderer {
             invertViewProjectionMatrix()
         }
 
-        val sunlight = Light(position=Vector(20f, 15f, 10f))
+        val sunlight = Light(
+            position = Vector(20f, 15f, 10f),
+            intensity = 0.2f // For the ambient light intensity
+        )
         uniforms = Uniforms(
             FloatArray(16), // empty model matrix
             camera.viewMatrix,

@@ -36,7 +36,7 @@ class PostProcessingFB(
         // Create depth texture
         glGenTextures(1, texture, 0)
         glBindTexture(GL_TEXTURE_2D, texture[0])
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, screenWidth, screenHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, null)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, fbWidth, fbHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, null)
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
@@ -50,7 +50,7 @@ class PostProcessingFB(
         // Create render buffer for depth testing
         glGenRenderbuffers(1, rbo, 0)
         glBindRenderbuffer(GL_RENDERBUFFER, rbo[0])
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, screenWidth, screenHeight)
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, fbWidth, fbHeight)
         glBindRenderbuffer(GL_RENDERBUFFER, 0)
 
         // Attach the render buffer
@@ -67,7 +67,7 @@ class PostProcessingFB(
     override fun onRender(models: List<Model>, uniforms: Uniforms) {
 
         // Bind so the next gl calls write into this buffer
-        glViewport(0, 0, screenWidth, screenHeight)
+        glViewport(0, 0, fbWidth, fbHeight)
         glBindFramebuffer(GL_FRAMEBUFFER, fbo[0])
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
         glEnable(GL_DEPTH_TEST)

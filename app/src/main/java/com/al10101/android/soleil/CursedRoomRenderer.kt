@@ -64,7 +64,7 @@ class CursedRoomRenderer(private val context: Context): TouchableGLRenderer {
         val bgColor = RGB.grayScale(0.1f)
         glClearColor(bgColor.r, bgColor.g, bgColor.b, 1f)
 
-        val sunlightProgram = SunlightShaderProgram(context, 24f)
+        val sunlightProgram = ColorShadowShaderProgram(context)
 
         val textureProgram = SimpleTextureShaderProgram(context)
         val textureId = context.loadTexture(R.drawable.old_obunga)

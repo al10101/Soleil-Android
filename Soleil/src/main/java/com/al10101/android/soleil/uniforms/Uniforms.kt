@@ -40,11 +40,10 @@ data class Uniforms(
     companion object {
 
         fun normalizedDeviceCoordinates(): Uniforms {
-            val identity = FloatArray(16).apply { identity() }
             return Uniforms(
-                identity,
-                identity,
-                identity,
+                FloatArray(16).apply { identity() },
+                FloatArray(16).apply { identity() },
+                FloatArray(16).apply { identity() },
                 Vector.zero
             )
         }

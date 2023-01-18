@@ -12,8 +12,6 @@ private const val U_MODEL_MATRIX = "u_ModelMatrix"
 
 private const val U_TEXTURE_UNIT = "u_TextureUnit"
 
-private const val U_CAMERA_POSITION = "u_CameraPosition"
-
 private const val A_POSITION = "a_Position"
 private const val A_COLOR = "a_Color"
 private const val A_NORMAL = "a_Normal"
@@ -34,10 +32,6 @@ open class ShaderProgram(
     }
     private val uModelMatrixLocation by lazy {
         glGetUniformLocation(program, U_MODEL_MATRIX)
-    }
-
-    private val uCameraPosition by lazy {
-        glGetUniformLocation(program, U_CAMERA_POSITION)
     }
 
     private val uTextureUnitLocations by lazy {
@@ -80,8 +74,6 @@ open class ShaderProgram(
         glUniformMatrix4fv(uProjectionMatrixLocation, 1, false, uniforms.projectionMatrix, 0)
         glUniformMatrix4fv(uViewMatrixLocation, 1, false, uniforms.viewMatrix, 0)
         glUniformMatrix4fv(uModelMatrixLocation, 1, false, uniforms.modelMatrix, 0)
-        // Set up the camera position
-        glUniform3fv(uCameraPosition, 1, uniforms.cameraPosition.toFloatArray(), 0)
         // Set up all the textures
         glBindTexture(GL_TEXTURE_2D, 0)
         textureIds.forEachIndexed { i, it ->

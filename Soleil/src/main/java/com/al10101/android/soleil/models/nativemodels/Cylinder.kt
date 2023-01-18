@@ -53,7 +53,6 @@ open class Cylinder @JvmOverloads constructor(
 
         // The computation of the top cap is not in winding order, so we need to store the faces
         val topFaces = mutableListOf<Face>()
-        var faceOffset = 0
 
         // This model will contain 3 different meshes, so we initialize 3 vertex arrays
         val tubeVertices = FloatArray(totalComponents * tubeStride)
@@ -111,7 +110,7 @@ open class Cylinder @JvmOverloads constructor(
             it[topOffset++] = 0.5f
         }
 
-        for (thetaIdx in 0 until slices) {
+        for ((faceOffset, thetaIdx) in (0 until slices).withIndex()) {
 
             // Pre-computed values
             val theta = -2f * pi * thetaIdx.toFloat() / (slices - 1).toFloat()
@@ -150,9 +149,9 @@ open class Cylinder @JvmOverloads constructor(
             tubeVertices[tubeOffset++] = rgb.b
             tubeVertices[tubeOffset++] = alpha
             // Normal
-            tubeVertices[tubeOffset++] = x
+            tubeVertices[tubeOffset++] = cosTheta
             tubeVertices[tubeOffset++] = 0f
-            tubeVertices[tubeOffset++] = z
+            tubeVertices[tubeOffset++] = sinTheta
             // Texture
             tubeVertices[tubeOffset++] = texX
             tubeVertices[tubeOffset++] = 1f
@@ -201,7 +200,6 @@ open class Cylinder @JvmOverloads constructor(
             val nextFace = if (thetaIdx == slices-1) { 1 } else { faceOffset + 1 }
             val currentFace = Face(faceOffset, 0, nextFace)
             topFaces.add(currentFace)
-            faceOffset ++
 
         }
 

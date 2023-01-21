@@ -23,16 +23,9 @@ class Snowman(
         val head = SnowmanHead(program, resolution, 1f, Vector.zero)
 
         // Add each part to the current model
-        super.absorbModel(head)
+        super.mergeToOneChild(head)
 
-        Log.d(TAG, "programs: $programs")
-        Log.d(TAG, "meshes: $meshes")
-        Log.d(TAG, "meshIdxWithProgram: $meshIdxWithProgram")
-        Log.d(TAG, "textureIds: $textureIds")
-        Log.d(TAG, "textureIdIdxWithMeshIdx: $textureIdIdxWithMeshIdx")
-        children.forEachIndexed { i, childNode ->
-            Log.d(TAG, "Child Nr. $i linked with indices: ${childNode.meshesIndices}")
-        }
+        super.logModel(TAG)
 
     }
 

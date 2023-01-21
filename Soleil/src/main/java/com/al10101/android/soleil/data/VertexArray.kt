@@ -33,4 +33,18 @@ class VertexArray(vertexData: FloatArray) {
         floatBuffer.position(0)
     }
 
+    fun updateBuffer(vertexData: FloatArray, start: Int) {
+        floatBuffer.position(start)
+        floatBuffer.put(vertexData)
+        floatBuffer.position(0)
+    }
+
+    fun readBuffer(start: Int, count: Int): FloatArray {
+        val vertexData = FloatArray(count)
+        floatBuffer.position(start)
+        floatBuffer.get(vertexData)
+        floatBuffer.position(0)
+        return vertexData
+    }
+
 }

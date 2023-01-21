@@ -1,5 +1,6 @@
 package com.al10101.android.soleil.extensions
 
+import android.opengl.Matrix
 import android.opengl.Matrix.*
 import com.al10101.android.soleil.data.Quaternion
 import com.al10101.android.soleil.data.Vector
@@ -125,4 +126,23 @@ fun FloatArray.rotation(q: Quaternion) {
 fun FloatArray.scaling(scale: Vector) {
     identity()
     scaleM(this, 0, scale.x, scale.y, scale.z)
+}
+
+fun FloatArray.toModelMatrix(position: Vector, rotation: Quaternion, scale: Vector) {
+    val translateMatrix = FloatArray(16).apply { translation(position) }
+    val rotateMatrix = FloatArray(16).apply { rotation(rotation) }
+    val scaleMatrix = FloatArray(16).apply { scaling(scale) }
+
+    val scalingRotation = FloatArray(16)
+    multiplyMM(scalingRotation, 0, rotateMatrix, 0, scaleMatrix, 0)
+    multiplyMM(this, 0, translateMatrix, 0, scalingRotation, 0)
+}
+
+// Vector 4 to another Vector 4
+fun FloatArray.transform(modelMatrix: FloatArray, temp: FloatArray) {
+    multiplyMV(temp, 0, modelMatrix, 0, this, 0)
+    this[0] = temp[0]
+    this[1] = temp[1]
+    this[2] = temp[2]
+    this[3] = temp[3]
 }

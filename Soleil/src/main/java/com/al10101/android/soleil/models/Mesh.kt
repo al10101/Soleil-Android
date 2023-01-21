@@ -1,7 +1,11 @@
 package com.al10101.android.soleil.models
 
 import android.opengl.GLES20.*
+import com.al10101.android.soleil.data.Quaternion
+import com.al10101.android.soleil.data.Vector
 import com.al10101.android.soleil.data.VertexArray
+import com.al10101.android.soleil.extensions.toVector
+import com.al10101.android.soleil.extensions.transform
 import com.al10101.android.soleil.programs.ShaderProgram
 import com.al10101.android.soleil.utils.BYTES_PER_FLOAT
 import java.nio.IntBuffer
@@ -23,6 +27,7 @@ class Mesh constructor(
     private val glPrimitivesMode: Int = GL_TRIANGLE_STRIP
 ) {
 
+    private val nVertices = vertexData.size / TOTAL_COMPONENT_COUNT
     private val vertexArray = VertexArray(vertexData)
     // The vertex indices is not needed if it renders in strip or fan
     private var vertexIndices: IntBuffer? = null
@@ -94,6 +99,58 @@ class Mesh constructor(
     private fun drawContinuousArray() {
         // nTotalElements here is the number of fan elements initialized in the constructor
         glDrawArrays(glPrimitivesMode, 0, nTotalElements)
+    }
+
+    private fun updateVertexArray(vertexData: FloatArray, start: Int, count: Int) {
+        vertexArray.updateBuffer(vertexData, start, count)
+    }
+
+    private fun updateVertexArray(vertexData: FloatArray, start: Int) {
+        vertexArray.updateBuffer(vertexData, start)
+    }
+
+    private fun readVertexArray(start: Int, count: Int): FloatArray {
+        return vertexArray.readBuffer(start, count)
+    }
+
+    fun updatePositionAndNormal(position: Vector, modelMatrix: FloatArray, temp: FloatArray) {
+
+        var transformedVector: Vector
+
+        for (i in 0 until nVertices) {
+
+            // Read the original value, transform and update the vertex array
+            var start = i * TOTAL_COMPONENTS_COUNT
+            val originalPosition = this.readVertexArray(start, POSITION_COMPONENT_COUNT)
+            transformedVector = floatArrayOf(
+                originalPosition[0],
+                originalPosition[1],
+                originalPosition[2], 1f
+            ).apply { transform(modelMatrix, temp) }.toVector()
+            val transformedPosition = floatArrayOf(
+                transformedVector.x,
+                transformedVector.y,
+                transformedVector.z
+            )
+            this.updateVertexArray(transformedPosition, start)
+
+            start += POSITION_COMPONENT_COUNT + COLOR_COMPONENT_COUNT
+            val originalNormal = this.readVertexArray(start, NORMAL_COMPONENT_COUNT)
+            transformedVector = floatArrayOf(
+                originalNormal[0],
+                originalNormal[1],
+                originalNormal[2], 1f
+            ).apply { transform(modelMatrix, temp) }.toVector()
+                .sub(position).normalize()
+            val transformedNormal = floatArrayOf(
+                transformedVector.x,
+                transformedVector.y,
+                transformedVector.z
+            )
+            this.updateVertexArray(transformedNormal, start)
+
+        }
+
     }
 
 }

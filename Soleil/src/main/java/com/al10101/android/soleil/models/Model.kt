@@ -1,14 +1,20 @@
 package com.al10101.android.soleil.models
 
 import android.util.Log
+import com.al10101.android.soleil.data.Quaternion
+import com.al10101.android.soleil.data.Vector
+import com.al10101.android.soleil.nodes.ChildNode
 import com.al10101.android.soleil.nodes.RootNode
 import com.al10101.android.soleil.uniforms.Uniforms
 import com.al10101.android.soleil.programs.ShaderProgram
 import com.al10101.android.soleil.utils.MODELS_TAG
 
+const val TOTAL_COMPONENTS_COUNT = 12
+
 open class Model(
     override val name: String
 ): RootNode(), Renderable {
+
 
     val programs: MutableList<ShaderProgram> = mutableListOf()
     val meshIdxWithProgram: MutableList<Int> = mutableListOf()
@@ -85,6 +91,11 @@ open class Model(
             other.remove(other.children[0])
         }
 
+    }
+
+    fun logModel(TAG: String) {
+        Log.i(TAG, "$name: meshes= ${meshes.size}  children= ${children.size}  programs= ${programs.size}")
+        super.logEveryChild(TAG, name, " ")
     }
 
 }

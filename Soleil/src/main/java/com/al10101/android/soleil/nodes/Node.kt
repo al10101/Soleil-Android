@@ -141,4 +141,12 @@ open class Node {
         }
     }
 
+    fun logEveryChild(TAG: String, modelName: String, marker: String) {
+        Log.i(TAG, "$modelName:${marker}child has ${children.size} children")
+        children.forEachIndexed { i, childNode ->
+            Log.i(TAG, "$modelName:${marker}child $i linked to meshes ${childNode.meshesIndices}")
+            childNode.logEveryChild(TAG, modelName, "$marker-")
+        }
+    }
+
 }

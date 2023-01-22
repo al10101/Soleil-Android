@@ -24,7 +24,7 @@ class Mesh constructor(
     vertexData: FloatArray,
     private val nTotalElements: Int,
     // As default, assume it renders with strip mode
-    private val glPrimitivesMode: Int = GL_TRIANGLE_STRIP
+    var glPrimitivesMode: Int = GL_TRIANGLE_STRIP
 ) {
 
     private val nVertices = vertexData.size / TOTAL_COMPONENT_COUNT

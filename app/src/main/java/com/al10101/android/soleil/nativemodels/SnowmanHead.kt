@@ -77,13 +77,13 @@ class SnowmanHead(
         val nose = Cone(noseLength, resolution, noseRadius, program, rgb=noseColor, position=nosePosition, alpha=transparency,
             rotation= Quaternion(Vector.unitY, Vector.unitZ))
 
-        mergeToOneChild(head)
-        mergeToOneChild(top)
-        mergeToOneChild(base)
-        mergeToOneChild(ribbon)
-        mergeToOneChild(rightEye)
-        mergeToOneChild(leftEye)
-        mergeToOneChild(nose)
+        absorbModel(head)
+        absorbModel(top)
+        absorbModel(base)
+        absorbModel(ribbon)
+        absorbModel(rightEye)
+        absorbModel(leftEye)
+        absorbModel(nose)
 
     }
 

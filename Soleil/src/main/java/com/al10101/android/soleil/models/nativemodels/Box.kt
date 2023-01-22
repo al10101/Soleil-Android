@@ -10,7 +10,7 @@ import com.al10101.android.soleil.models.Model
 import com.al10101.android.soleil.nodes.ChildNode
 import com.al10101.android.soleil.programs.ShaderProgram
 
-open class Box @JvmOverloads constructor(
+class Box @JvmOverloads constructor(
     width: Float, height: Float, depth: Float,
     program: ShaderProgram,
     rgb: RGB = RGB.white,

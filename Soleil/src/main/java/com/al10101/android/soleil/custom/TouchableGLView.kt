@@ -56,7 +56,7 @@ open class TouchableGLView(context: Context): GLSurfaceView(context) {
             MotionEvent.ACTION_MOVE -> {
                 if (gesture == GestureTypes.DRAG) {
                     queueEvent {
-                        touchableGLRenderer.handleTouchDragToRotate(normalizedX, normalizedY)
+                        touchableGLRenderer.handleTouchDrag(normalizedX, normalizedY)
                     }
                 } else if (gesture == GestureTypes.ZOOM) {
                     Log.d("CursedRoomRenderer", "onTouchEvent: firstPointer= $firstPointerId  secondPointer= $secondPointerId")

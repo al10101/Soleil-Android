@@ -8,17 +8,17 @@ import com.al10101.android.soleil.data.Plane
 import com.al10101.android.soleil.data.Quaternion
 import com.al10101.android.soleil.data.Ray
 import com.al10101.android.soleil.data.Vector
-import com.al10101.android.soleil.extensions.divideByW
-import com.al10101.android.soleil.extensions.identity
-import com.al10101.android.soleil.extensions.rotation
-import com.al10101.android.soleil.extensions.toVector
+import com.al10101.android.soleil.extensions.*
 import com.al10101.android.soleil.models.Model
 import com.al10101.android.soleil.uniforms.Camera
 import com.al10101.android.soleil.uniforms.Uniforms
+import com.al10101.android.soleil.utils.CONTROLS_TAG
+import kotlin.math.abs
 
 interface TouchableGLRenderer: GLSurfaceView.Renderer {
 
-    var zoomMode: ZoomModes
+    var zoomMode: ZoomMode
+    var dragMode: DragMode
     var models: MutableList<Model>
     var controls: Controls
     var camera: Camera
@@ -28,7 +28,7 @@ interface TouchableGLRenderer: GLSurfaceView.Renderer {
     fun handleTouchPress(normalizedX: Float, normalizedY: Float) {
         val ray = convertNormalized2DPointToRay(normalizedX, normalizedY)
         // Define a plane representing the background
-        val plane = Plane(Vector.zero, Vector(0f, 0f, maxNorm))
+        val plane = Plane(Vector.zero, Vector.unitZ)
         // Find out where the touched point intersects plane
         val touchedPoint = ray.intersectionPointWith(plane)
         controls.previousTouch = Vector(touchedPoint.x, touchedPoint.y, maxNorm)
@@ -49,17 +49,29 @@ interface TouchableGLRenderer: GLSurfaceView.Renderer {
         controls.currentTouch.y = controls.midTouch.y
     }
 
-    fun handleTouchDragToRotate(normalizedX: Float, normalizedY: Float) {
+    fun handleTouchDrag(normalizedX: Float, normalizedY: Float) {
         // Find out where the touched point intersects the plane
         val ray = convertNormalized2DPointToRay(normalizedX, normalizedY)
-        val plane = Plane(Vector.zero, Vector(0f, 0f, maxNorm))
+        val plane = Plane(Vector.zero, Vector.unitZ)
         val touchedPoint = ray.intersectionPointWith(plane)
         // Define new vector
         controls.currentTouch = Vector(touchedPoint.x, touchedPoint.y, maxNorm)
-        // Compute new rotation taking the previous touch as the reference point and
-        // the current (most recent) touch as the direction of the rotation
-        val quaternion = Quaternion(controls.previousTouch, controls.currentTouch)
-        controls.rotationMatrix.rotation(quaternion)
+        when (dragMode) {
+            DragMode.ROTATION -> {
+                // Compute new rotation taking the previous touch as the reference point and
+                // the current (most recent) touch as the direction of the rotation
+                val quaternion = Quaternion(controls.previousTouch, controls.currentTouch)
+                controls.dragMatrix.rotation(quaternion)
+            }
+            DragMode.TRANSLATION -> {
+                // Compute the new position, without getting out of the max norm
+                val deltaPosition = controls.currentTouch.sub(controls.previousTouch)
+                val newPosition = controls.globalTranslation.add(deltaPosition) // <- position after moving the matrix, if it applies
+                if (abs(newPosition.x) < maxNorm && abs(newPosition.y) < maxNorm) {
+                    controls.dragMatrix.translation(deltaPosition)
+                }
+            }
+        }
     }
 
     fun handleZoomCamera(ev: MotionEvent, firstPointerId: Int, secondPointerId: Int): Boolean {
@@ -76,7 +88,7 @@ interface TouchableGLRenderer: GLSurfaceView.Renderer {
         controls.previousTouch.x = controls.midTouch.x
         controls.previousTouch.y = controls.midTouch.y
         return when (zoomMode) {
-            ZoomModes.PERSPECTIVE ->
+            ZoomMode.PROJECTION ->
                 if (controls.currentFov in minFov..maxFov) {
                     camera.fovy = controls.currentFov
                     setClipping()
@@ -84,7 +96,7 @@ interface TouchableGLRenderer: GLSurfaceView.Renderer {
                 } else {
                     false
                 }
-            ZoomModes.TRANSLATION ->
+            ZoomMode.POSITION ->
                 if (controls.currentPosZ in minZ..maxZ) {
                     camera.position.z = controls.currentPosZ
                     setClipping()
@@ -98,9 +110,12 @@ interface TouchableGLRenderer: GLSurfaceView.Renderer {
 
     fun stopMovement(ev: MotionEvent) {
         // Set the final rotation as the default model matrix for every model
-        models.forEach { it.overwriteModelMatrix(controls.rotationMatrix) }
+        models.forEach { it.overwriteModelMatrix(controls.dragMatrix) }
         // Set identity so it doesn't apply anymore
-        controls.rotationMatrix.identity()
+        controls.globalTranslation = controls.globalTranslation.add(
+            controls.dragMatrix.extractTranslation()
+        )
+        controls.dragMatrix.identity()
     }
 
     private fun setClipping() {

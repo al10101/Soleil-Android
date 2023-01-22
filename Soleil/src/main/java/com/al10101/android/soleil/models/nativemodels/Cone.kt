@@ -16,7 +16,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-open class Cone @JvmOverloads constructor(
+class Cone @JvmOverloads constructor(
     height: Float, slices: Int, radius: Float,
     program: ShaderProgram,
     cap: Boolean = true,

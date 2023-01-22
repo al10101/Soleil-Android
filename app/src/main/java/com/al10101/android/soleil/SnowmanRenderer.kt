@@ -2,9 +2,7 @@ package com.al10101.android.soleil
 
 import android.content.Context
 import android.opengl.GLES20.*
-import com.al10101.android.soleil.custom.Controls
-import com.al10101.android.soleil.custom.TouchableGLRenderer
-import com.al10101.android.soleil.custom.ZoomModes
+import com.al10101.android.soleil.custom.*
 import com.al10101.android.soleil.data.Quaternion
 import com.al10101.android.soleil.data.RGB
 import com.al10101.android.soleil.data.Vector
@@ -32,7 +30,8 @@ class SnowmanRenderer(private val context: Context): TouchableGLRenderer {
     override lateinit var controls: Controls
     override lateinit var models: MutableList<Model>
     override lateinit var uniforms: Uniforms
-    override var zoomMode: ZoomModes = ZoomModes.PERSPECTIVE
+    override var zoomMode: ZoomMode = ZoomMode.POSITION
+    override var dragMode: DragMode = DragMode.TRANSLATION
     override var maxNorm: Float = 0f
 
     private var globalStartTime: Long = 0
@@ -65,6 +64,10 @@ class SnowmanRenderer(private val context: Context): TouchableGLRenderer {
 
         models = mutableListOf(
             snowman, //ground
+        )
+
+        models.add(
+            Quad(7f, 7f, program, rgb=RGB.red)
         )
 
     }
@@ -105,7 +108,7 @@ class SnowmanRenderer(private val context: Context): TouchableGLRenderer {
         logFrameRate(TAG)
 
         // Move the whole scene
-        uniforms.modelMatrix = controls.rotationMatrix.copyOf()
+        uniforms.modelMatrix = controls.dragMatrix.copyOf()
 
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
 

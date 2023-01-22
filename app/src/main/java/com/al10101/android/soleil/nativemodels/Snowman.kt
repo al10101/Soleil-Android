@@ -23,7 +23,7 @@ class Snowman(
         val head = SnowmanHead(program, resolution, 1f, Vector.zero)
 
         // Add each part to the current model
-        super.mergeToOneChild(head)
+        super.absorbModel(head)
 
         super.logModel(TAG)
 

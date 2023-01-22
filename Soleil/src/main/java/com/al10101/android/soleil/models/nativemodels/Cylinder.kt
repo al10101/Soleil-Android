@@ -17,7 +17,7 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
-open class Cylinder @JvmOverloads constructor(
+class Cylinder @JvmOverloads constructor(
     height: Float, slices: Int, radius: Float,
     program: ShaderProgram,
     bottomCap: Boolean = true,

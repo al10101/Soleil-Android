@@ -128,6 +128,28 @@ fun FloatArray.scaling(scale: Vector) {
     scaleM(this, 0, scale.x, scale.y, scale.z)
 }
 
+// From a 4x4 matrix, get the information corresponding to the position
+fun FloatArray.extractTranslation(): Vector {
+    return this.column(3).toVector()
+}
+
+// From a 4x4 matrix, get the information corresponding to the scale
+fun FloatArray.extractScaling(): Vector {
+    val sx = this.column(0).toVector().length()
+    val sy = this.column(1).toVector().length()
+    val sz = this.column(2).toVector().length()
+    return Vector(sx, sy, sz)
+}
+
+// From a 4x4 matrix, reduce to get the rotation matrix
+fun FloatArray.reduceToRotation() {
+    val s = extractScaling()
+    this[0] /= s.x ; this[4] /= s.y ; this[8]  /= s.z ; this[12] = 0f
+    this[1] /= s.x ; this[5] /= s.y ; this[9]  /= s.z ; this[13] = 0f
+    this[2] /= s.x ; this[6] /= s.y ; this[10] /= s.z ; this[14] = 0f
+    this[3]  =  0f ; this[6]  =  0f ; this[11]  =  0f ; this[15] = 1f
+}
+
 fun FloatArray.toModelMatrix(position: Vector, rotation: Quaternion, scale: Vector) {
     val translateMatrix = FloatArray(16).apply { translation(position) }
     val rotateMatrix = FloatArray(16).apply { rotation(rotation) }

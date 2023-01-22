@@ -6,8 +6,9 @@ import android.opengl.Matrix.multiplyMM
 import android.opengl.Matrix.multiplyMV
 import android.util.Log
 import com.al10101.android.soleil.custom.Controls
+import com.al10101.android.soleil.custom.DragMode
 import com.al10101.android.soleil.custom.TouchableGLRenderer
-import com.al10101.android.soleil.custom.ZoomModes
+import com.al10101.android.soleil.custom.ZoomMode
 import com.al10101.android.soleil.data.Quaternion
 import com.al10101.android.soleil.data.RGB
 import com.al10101.android.soleil.data.Rectangle
@@ -38,7 +39,8 @@ class CursedRoomRenderer(private val context: Context): TouchableGLRenderer {
     override lateinit var controls: Controls
     override lateinit var camera: Camera
     override lateinit var uniforms: Uniforms
-    override var zoomMode: ZoomModes = ZoomModes.TRANSLATION
+    override var zoomMode: ZoomMode = ZoomMode.PROJECTION
+    override var dragMode: DragMode = DragMode.TRANSLATION
     override var maxNorm: Float = 0f
 
     private lateinit var shadowMapFB: ShadowMapFB
@@ -64,7 +66,7 @@ class CursedRoomRenderer(private val context: Context): TouchableGLRenderer {
         val bgColor = RGB.grayScale(0.1f)
         glClearColor(bgColor.r, bgColor.g, bgColor.b, 1f)
 
-        val sunlightProgram = ColorShadowShaderProgram(context)
+        val sunlightProgram = SunlightShaderProgram(context, 24f)
 
         val textureProgram = SimpleTextureShaderProgram(context)
         val textureId = context.loadTexture(R.drawable.old_obunga)
@@ -197,7 +199,7 @@ class CursedRoomRenderer(private val context: Context): TouchableGLRenderer {
         logFrameRate(TAG)
 
         // Move the whole scene
-        uniforms.modelMatrix = controls.rotationMatrix.copyOf()
+        uniforms.modelMatrix = controls.dragMatrix.copyOf()
 
         // Render the depth of the scene to get the shadow texture
         shadowMapFB.onRender(models, uniforms)

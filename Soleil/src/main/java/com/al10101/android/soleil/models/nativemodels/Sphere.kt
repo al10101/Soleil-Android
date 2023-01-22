@@ -15,7 +15,7 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
-open class Sphere @JvmOverloads constructor(
+class Sphere @JvmOverloads constructor(
     stacks: Int, slices: Int, radius: Float,
     program: ShaderProgram,
     rgb: RGB = RGB.white,

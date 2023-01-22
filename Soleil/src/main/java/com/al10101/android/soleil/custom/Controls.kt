@@ -6,6 +6,7 @@ import com.al10101.android.soleil.extensions.identity
 data class Controls(
     var oldDist: Float = 0f,
     var midTouch: Vector = Vector.zero,
+    var globalTranslation: Vector = Vector.zero,
     // For perspective zoom
     var startFov: Float = 0f,
     var currentFov: Float = 0f,
@@ -16,7 +17,7 @@ data class Controls(
     var currentTouch: Vector = Vector.zero
 ) {
 
-    var rotationMatrix: FloatArray = FloatArray(16).apply { identity() }
+    var dragMatrix: FloatArray = FloatArray(16).apply { identity() }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -24,12 +25,12 @@ data class Controls(
 
         other as Controls
 
-        if (!rotationMatrix.contentEquals(other.rotationMatrix)) return false
+        if (!dragMatrix.contentEquals(other.dragMatrix)) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        return rotationMatrix.contentHashCode()
+        return dragMatrix.contentHashCode()
     }
 }

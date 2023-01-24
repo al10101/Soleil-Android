@@ -79,4 +79,16 @@ open class TouchableGLView(context: Context): GLSurfaceView(context) {
 
     }
 
+    fun onDragModeChanged(dragMode: DragMode) {
+        queueEvent {
+            touchableGLRenderer.onDragModeChanged(dragMode)
+        }
+    }
+
+    fun onZoomModeChanged(zoomMode: ZoomMode) {
+        queueEvent {
+            touchableGLRenderer.onZoomModeChanged(zoomMode)
+        }
+    }
+
 }

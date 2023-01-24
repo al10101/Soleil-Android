@@ -123,6 +123,10 @@ fun FloatArray.rotation(q: Quaternion) {
     rotateM(this, 0, theta, crossUnit.x, crossUnit.y, crossUnit.z)
 }
 
+fun FloatArray.eulerRotation(q: Quaternion) {
+    // Some times, we need the actual rotation
+}
+
 fun FloatArray.scaling(scale: Vector) {
     identity()
     scaleM(this, 0, scale.x, scale.y, scale.z)

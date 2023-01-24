@@ -17,8 +17,6 @@ import kotlin.math.abs
 
 interface TouchableGLRenderer: GLSurfaceView.Renderer {
 
-    var zoomMode: ZoomMode
-    var dragMode: DragMode
     var models: MutableList<Model>
     var controls: Controls
     var camera: Camera
@@ -56,7 +54,7 @@ interface TouchableGLRenderer: GLSurfaceView.Renderer {
         val touchedPoint = ray.intersectionPointWith(plane)
         // Define new vector
         controls.currentTouch = Vector(touchedPoint.x, touchedPoint.y, maxNorm)
-        when (dragMode) {
+        when (controls.dragMode) {
             DragMode.ROTATION -> {
                 // Compute new rotation taking the previous touch as the reference point and
                 // the current (most recent) touch as the direction of the rotation
@@ -65,11 +63,9 @@ interface TouchableGLRenderer: GLSurfaceView.Renderer {
             }
             DragMode.TRANSLATION -> {
                 // Compute the new position, without getting out of the max norm
+                val scaleNorm = 1.5f
                 val deltaPosition = controls.currentTouch.sub(controls.previousTouch)
-                val newPosition = controls.globalTranslation.add(deltaPosition) // <- position after moving the matrix, if it applies
-                if (abs(newPosition.x) < maxNorm && abs(newPosition.y) < maxNorm) {
-                    controls.dragMatrix.translation(deltaPosition)
-                }
+                controls.dragMatrix.translation(deltaPosition)
             }
         }
     }
@@ -77,8 +73,8 @@ interface TouchableGLRenderer: GLSurfaceView.Renderer {
     fun handleZoomCamera(ev: MotionEvent, firstPointerId: Int, secondPointerId: Int): Boolean {
         // Boundaries for the operation
         val minFov = 5f
-        val maxFov = 120f
-        val minZ = camera.near + maxNorm * 0.5f
+        val maxFov = 150f
+        val minZ = camera.near + maxNorm * 0.2f
         val maxZ = camera.far - maxNorm
         // If the event is not registered correctly, the zoom operation must be cancelled
         val newDist = spacing(ev, firstPointerId, secondPointerId) ?: return false
@@ -87,7 +83,7 @@ interface TouchableGLRenderer: GLSurfaceView.Renderer {
         controls.currentPosZ = controls.startPosZ * zoom
         controls.previousTouch.x = controls.midTouch.x
         controls.previousTouch.y = controls.midTouch.y
-        return when (zoomMode) {
+        return when (controls.zoomMode) {
             ZoomMode.PROJECTION ->
                 if (controls.currentFov in minFov..maxFov) {
                     camera.fovy = controls.currentFov
@@ -112,9 +108,6 @@ interface TouchableGLRenderer: GLSurfaceView.Renderer {
         // Set the final rotation as the default model matrix for every model
         models.forEach { it.overwriteModelMatrix(controls.dragMatrix) }
         // Set identity so it doesn't apply anymore
-        controls.globalTranslation = controls.globalTranslation.add(
-            controls.dragMatrix.extractTranslation()
-        )
         controls.dragMatrix.identity()
     }
 
@@ -170,6 +163,14 @@ interface TouchableGLRenderer: GLSurfaceView.Renderer {
             }
         }
         return Vector(touchEventX, touchEventY, 0f)
+    }
+
+    fun onDragModeChanged(dragMode: DragMode) {
+        controls.dragMode = dragMode
+    }
+
+    fun onZoomModeChanged(zoomMode: ZoomMode) {
+        controls.zoomMode = zoomMode
     }
 
 }

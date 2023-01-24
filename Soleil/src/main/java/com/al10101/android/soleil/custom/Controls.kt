@@ -4,9 +4,11 @@ import com.al10101.android.soleil.data.Vector
 import com.al10101.android.soleil.extensions.identity
 
 data class Controls(
+    // The modes define the functions to use when handling events
+    var zoomMode: ZoomMode,
+    var dragMode: DragMode,
     var oldDist: Float = 0f,
     var midTouch: Vector = Vector.zero,
-    var globalTranslation: Vector = Vector.zero,
     // For perspective zoom
     var startFov: Float = 0f,
     var currentFov: Float = 0f,

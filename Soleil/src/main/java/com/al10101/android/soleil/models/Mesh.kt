@@ -2,6 +2,7 @@ package com.al10101.android.soleil.models
 
 import android.opengl.GLES20.*
 import com.al10101.android.soleil.data.Quaternion
+import com.al10101.android.soleil.data.RGB
 import com.al10101.android.soleil.data.Vector
 import com.al10101.android.soleil.data.VertexArray
 import com.al10101.android.soleil.extensions.toVector
@@ -148,6 +149,20 @@ class Mesh constructor(
                 transformedVector.z
             )
             this.updateVertexArray(transformedNormal, start)
+
+        }
+
+    }
+
+    fun updateColor(rgb: RGB, alpha: Float = 1f) {
+
+        val colorArray = floatArrayOf(rgb.r, rgb.g, rgb.b, alpha)
+
+        for (i in 0 until nVertices) {
+
+            // Not necessary to read the original value, only replace the old ones
+            val start = i * TOTAL_COMPONENTS_COUNT + POSITION_COMPONENT_COUNT
+            this.updateVertexArray(colorArray, start)
 
         }
 

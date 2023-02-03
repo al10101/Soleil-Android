@@ -39,8 +39,6 @@ class CursedRoomRenderer(private val context: Context): TouchableGLRenderer {
     override lateinit var controls: Controls
     override lateinit var camera: Camera
     override lateinit var uniforms: Uniforms
-    override var zoomMode: ZoomMode = ZoomMode.PROJECTION
-    override var dragMode: DragMode = DragMode.TRANSLATION
     override var maxNorm: Float = 0f
 
     private lateinit var shadowMapFB: ShadowMapFB
@@ -140,7 +138,7 @@ class CursedRoomRenderer(private val context: Context): TouchableGLRenderer {
         val ratio = width.toFloat() / height.toFloat()
 
         maxNorm = 8f
-        controls = Controls()
+        controls = Controls(ZoomMode.PROJECTION, DragMode.ROTATION)
         camera = Camera(
             position = Vector(0f, 4f, 12f),
             center = Vector(0f, 0f, -maxNorm),

@@ -30,8 +30,6 @@ class SnowmanRenderer(private val context: Context): TouchableGLRenderer {
     override lateinit var controls: Controls
     override lateinit var models: MutableList<Model>
     override lateinit var uniforms: Uniforms
-    override var zoomMode: ZoomMode = ZoomMode.POSITION
-    override var dragMode: DragMode = DragMode.TRANSLATION
     override var maxNorm: Float = 0f
 
     private var globalStartTime: Long = 0
@@ -78,7 +76,7 @@ class SnowmanRenderer(private val context: Context): TouchableGLRenderer {
         val ratio = width.toFloat() / height.toFloat()
 
         maxNorm = 3.5f
-        controls = Controls()
+        controls = Controls(ZoomMode.POSITION, DragMode.ROTATION)
         camera = Camera(
             position = Vector(0f, 3.5f, 12f),
             center = Vector(0f, 3.5f, 0f),

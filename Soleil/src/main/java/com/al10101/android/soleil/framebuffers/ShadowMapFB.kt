@@ -8,7 +8,7 @@ import com.al10101.android.soleil.models.Model
 import com.al10101.android.soleil.programs.ShaderProgram
 import com.al10101.android.soleil.uniforms.Uniforms
 
-class ShadowMapFB(
+open class ShadowMapFB(
     context: Context,
     fbWidth: Int,
     fbHeight: Int,

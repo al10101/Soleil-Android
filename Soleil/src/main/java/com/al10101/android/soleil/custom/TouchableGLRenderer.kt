@@ -2,7 +2,6 @@ package com.al10101.android.soleil.custom
 
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix.multiplyMV
-import android.util.Log
 import android.view.MotionEvent
 import com.al10101.android.soleil.data.Plane
 import com.al10101.android.soleil.data.Quaternion
@@ -12,8 +11,6 @@ import com.al10101.android.soleil.extensions.*
 import com.al10101.android.soleil.models.Model
 import com.al10101.android.soleil.uniforms.Camera
 import com.al10101.android.soleil.uniforms.Uniforms
-import com.al10101.android.soleil.utils.CONTROLS_TAG
-import kotlin.math.abs
 
 interface TouchableGLRenderer: GLSurfaceView.Renderer {
 

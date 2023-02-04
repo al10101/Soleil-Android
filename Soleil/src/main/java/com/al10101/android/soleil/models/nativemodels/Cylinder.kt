@@ -1,12 +1,9 @@
 package com.al10101.android.soleil.models.nativemodels
 
-import android.opengl.GLES20.GL_TRIANGLE_FAN
 import com.al10101.android.soleil.data.Quaternion
 import com.al10101.android.soleil.data.RGB
 import com.al10101.android.soleil.data.Vector
 import com.al10101.android.soleil.extensions.toModelMatrix
-import com.al10101.android.soleil.extensions.toVector
-import com.al10101.android.soleil.extensions.transform
 import com.al10101.android.soleil.models.Face
 import com.al10101.android.soleil.models.Mesh
 import com.al10101.android.soleil.models.Model
@@ -75,14 +72,16 @@ class Cylinder @JvmOverloads constructor(
             // Since the tube will be rendered with the strip mode, the stride takes into account
             // that 2 triangles are needed for each slice and that the first and last 2 vertices are
             // duplicated
-            val tubeStride = slices * 2 + 2
+            val tubeStride = slices * 2
 
             // Both caps will be drawn with the fan mode, so the stride needs only 1 more value to
             // store the center of the circle
             val capStride = slices + 1
 
-            // The computation of the top cap is not in winding order, so we need to store the faces
+            // We need to store the faces of all 3 meshes
             val topFaces = mutableListOf<Face>()
+            val bottomFaces = mutableListOf<Face>()
+            val tubeFaces = mutableListOf<Face>()
 
             // The constructor defines the mesh
             val tubeVertices = FloatArray(TOTAL_COMPONENTS_COUNT * tubeStride)
@@ -140,7 +139,7 @@ class Cylinder @JvmOverloads constructor(
                 it[topOffset++] = 0.5f
             }
 
-            for ((faceOffset, thetaIdx) in (0 until slices).withIndex()) {
+            for (thetaIdx in 0 until slices) {
 
                 // Pre-computed values
                 val theta = -2f * pi * thetaIdx.toFloat() / (slices - 1).toFloat()
@@ -186,8 +185,22 @@ class Cylinder @JvmOverloads constructor(
                 tubeVertices[tubeOffset++] = texX
                 tubeVertices[tubeOffset++] = 1f
 
+                // Add the faces. If it is the last slice, close the strip
+                val nextCapFaceIdx = if (thetaIdx == slices-1) { 1 } else { thetaIdx + 1 }
+                val nextBottomTubeFaceIdx = if (thetaIdx == slices-1) { 0 } else { thetaIdx*2 + 2 }
+                val nextTopTubeFaceIdx = if (thetaIdx == slices-1) { 1 } else { thetaIdx*2 + 3 }
+
+                // Add the tube faces in GL_TRIANGLE_STRIP order
+                val bottomTriangle = Face(thetaIdx*2, thetaIdx*2 + 1, nextBottomTubeFaceIdx)
+                val topTriangle = Face(nextBottomTubeFaceIdx, thetaIdx*2 + 1, nextTopTubeFaceIdx)
+                tubeFaces.add(bottomTriangle)
+                tubeFaces.add(topTriangle)
+
                 // BottomCap
                 bottomVertices?.let {
+                    // Face maintaining counter clockwise order pointing downwards
+                    val bottomFace = Face(nextCapFaceIdx, 0, thetaIdx)
+                    bottomFaces.add(bottomFace)
                     // Position
                     it[bottomOffset++] = x
                     it[bottomOffset++] = 0f
@@ -208,6 +221,9 @@ class Cylinder @JvmOverloads constructor(
 
                 // TopCap
                 topVertices?.let {
+                    // Face maintaining counter clockwise order pointing upwards
+                    val topFace = Face(thetaIdx, 0, nextCapFaceIdx)
+                    topFaces.add(topFace)
                     // Position
                     it[topOffset++] = x
                     it[topOffset++] = height
@@ -226,22 +242,12 @@ class Cylinder @JvmOverloads constructor(
                     it[topOffset++] = 0.5f + sinTheta * 0.5f
                 }
 
-                // Add the faces. If it is the last slice, close the triangle
-                val nextFace = if (thetaIdx == slices-1) { 1 } else { faceOffset + 1 }
-                val currentFace = Face(faceOffset, 0, nextFace)
-                topFaces.add(currentFace)
-
             }
 
-            // Create a degenerate triangle to connect stacks and maintain winding order
-            for (i in 0 until TOTAL_COMPONENTS_COUNT * 2) {
-                tubeVertices[tubeOffset++] = tubeVertices[i]
-            }
-
-            // Faces only needed for the top mesh
+            // Declare meshes if not null
             val topMesh = topVertices?.let { Mesh(it, topFaces) }
-            val tubeMesh = Mesh(tubeVertices, tubeStride)
-            val bottomMesh = bottomVertices?.let { Mesh(it, capStride, GL_TRIANGLE_FAN) }
+            val tubeMesh = Mesh(tubeVertices, tubeFaces)
+            val bottomMesh = bottomVertices?.let { Mesh(it, bottomFaces) }
 
             val meshes = mutableListOf<Mesh>()
             meshes.add(tubeMesh)

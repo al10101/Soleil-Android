@@ -7,6 +7,7 @@ import com.al10101.android.soleil.models.Model
 import com.al10101.android.soleil.models.nativemodels.Cone
 import com.al10101.android.soleil.models.nativemodels.Cylinder
 import com.al10101.android.soleil.models.nativemodels.Sphere
+import com.al10101.android.soleil.nodes.ChildNode
 import com.al10101.android.soleil.programs.ShaderProgram
 import kotlin.math.sqrt
 
@@ -64,26 +65,77 @@ class SnowmanHead(
 
         val transparency = 1f
 
-        // We can define all models now
-        val head = Sphere(resolution, resolution, radius, program, rgb=headColor, position=headPosition)
+        // We can define all meshes now
+        Sphere.getMesh(resolution, resolution, topRadius, rgb=headColor, alpha=1f,
+            position=headPosition, rotation= Quaternion.upY, scale= Vector.one
+        ).let { head ->
+            super.meshes.add(head)
+            super.meshIdxWithProgram.add(0)
+        }
 
-        val top = Cylinder(topHeight, resolution, topRadius, program, bottomCap=false, rgb=hatColor, position=topPosition, alpha=transparency)
-        val base = Cylinder(baseHeight, resolution, baseRadius, program, rgb=hatColor, position=basePosition, alpha=transparency)
-        val ribbon = Cylinder(ribbonHeight, resolution, ribbonRadius, program, rgb=ribbonColor, position=ribbonPosition, alpha=transparency)
+        Cylinder.getMeshes(topHeight, resolution, topRadius,
+            bottomCap=false, topCap=true, rgb=hatColor, alpha=transparency,
+            position=topPosition, rotation= Quaternion.upY, scale= Vector.one
+        ).let { topHatMeshes ->
+            topHatMeshes.forEach {
+                super.meshes.add(it)
+                super.meshIdxWithProgram.add(0)
+            }
+        }
 
-        val rightEye = Sphere(eyeResolution, eyeResolution, eyeRadius, program, rgb=eyeColor, position=rightEyePosition)
-        val leftEye = Sphere(eyeResolution, eyeResolution, eyeRadius, program, rgb=eyeColor, position=leftEyePosition)
+        Cylinder.getMeshes(baseHeight, resolution, baseRadius,
+            bottomCap=true, topCap=true, rgb=hatColor, alpha=transparency,
+            position=basePosition, rotation= Quaternion.upY, scale= Vector.one
+        ).let { bottomHatMeshes ->
+            bottomHatMeshes.forEach {
+                super.meshes.add(it)
+                super.meshIdxWithProgram.add(0)
+            }
+        }
 
-        val nose = Cone(noseLength, resolution, noseRadius, program, rgb=noseColor, position=nosePosition, alpha=transparency,
-            rotation= Quaternion(Vector.unitY, Vector.unitZ))
 
-        absorbModel(head)
-        absorbModel(top)
-        absorbModel(base)
-        absorbModel(ribbon)
-        absorbModel(rightEye)
-        absorbModel(leftEye)
-        absorbModel(nose)
+        Cylinder.getMeshes(ribbonHeight, resolution, ribbonRadius,
+            bottomCap=false, topCap=true, rgb=ribbonColor, alpha=transparency,
+            position=ribbonPosition, rotation= Quaternion.upY, scale= Vector.one
+        ).let { ribbonMeshes ->
+            ribbonMeshes.forEach {
+                super.meshes.add(it)
+                super.meshIdxWithProgram.add(0)
+            }
+        }
+
+        Sphere.getMesh(eyeResolution, eyeResolution, eyeRadius,
+            rgb=eyeColor, alpha=1f,
+            position=rightEyePosition, rotation= Quaternion.upY, scale= Vector.one
+        ).let { rightEye ->
+            super.meshes.add(rightEye)
+            super.meshIdxWithProgram.add(0)
+        }
+        Sphere.getMesh(eyeResolution, eyeResolution, eyeRadius,
+            rgb=eyeColor, alpha=1f,
+            position=leftEyePosition, rotation= Quaternion.upY, scale= Vector.one
+        ).let { leftEye ->
+            super.meshes.add(leftEye)
+            super.meshIdxWithProgram.add(0)
+        }
+
+        Cone.getMeshes(noseLength, resolution, noseRadius,
+            cap=false, rgb=noseColor, alpha=transparency,
+            position=nosePosition, rotation=Quaternion(Vector.unitY, Vector.unitZ), scale= Vector.one
+        ).let { noseMeshes ->
+            noseMeshes.forEach {
+                super.meshes.add(it)
+                super.meshIdxWithProgram.add(0)
+            }
+        }
+
+        // Add the only program and only child. No textures
+        super.programs.add(program)
+        super.add(
+            ChildNode(Vector.zero, Quaternion.upY, Vector.one).apply {
+                super.meshes.indices.forEach { meshesIndices.add(it) }
+            }
+        )
 
     }
 

@@ -4,8 +4,6 @@ import com.al10101.android.soleil.data.Quaternion
 import com.al10101.android.soleil.data.RGB
 import com.al10101.android.soleil.data.Vector
 import com.al10101.android.soleil.extensions.toModelMatrix
-import com.al10101.android.soleil.extensions.toVector
-import com.al10101.android.soleil.extensions.transform
 import com.al10101.android.soleil.models.Face
 import com.al10101.android.soleil.models.Mesh
 import com.al10101.android.soleil.models.Model

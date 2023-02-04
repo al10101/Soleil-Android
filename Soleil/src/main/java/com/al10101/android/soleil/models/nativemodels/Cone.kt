@@ -1,6 +1,5 @@
 package com.al10101.android.soleil.models.nativemodels
 
-import android.opengl.GLES20.GL_TRIANGLE_FAN
 import com.al10101.android.soleil.data.Quaternion
 import com.al10101.android.soleil.data.RGB
 import com.al10101.android.soleil.data.Vector
@@ -89,8 +88,10 @@ class Cone @JvmOverloads constructor(
             // Vertices 0 and 2 are located at the bottom of the cone, the top of the cone is in the vertex
             // 1. Since we are doing this because we want each triangle with its own normal different from
             // the rest, we make sure to compute it separately. The faces will be added in each iteration
-            val faces = mutableListOf<Face>()
-            var faceOffset = 0
+            val coneFaces = mutableListOf<Face>()
+            val capFaces = mutableListOf<Face>()
+            var coneFaceOffset = 0
+            var capFaceOffset = 0
 
             // This model will contain 2 meshes, so we initialize 2 vertex arrays
             val coneVertices = FloatArray(TOTAL_COMPONENTS_COUNT * coneStride)
@@ -170,13 +171,18 @@ class Cone @JvmOverloads constructor(
                 coneVertices[coneOffset++] = 1f
 
                 // Add the faces. If it is the last slice, close the triangle with the first index
-                val nextFaceIdx = if (thetaIdx == slices-1) { 0 } else { faceOffset + 2 }
-                val currentFace = Face(faceOffset, faceOffset+1, nextFaceIdx)
-                faces.add(currentFace)
-                faceOffset += 2
+                val nextFaceIdx = if (thetaIdx == slices-1) { 0 } else { coneFaceOffset + 2 }
+                val coneFace = Face(coneFaceOffset, coneFaceOffset+1, nextFaceIdx)
+                coneFaces.add(coneFace)
+                coneFaceOffset += 2
 
                 // Cap
                 capVertices?.let {
+                    // Face maintaining counter clockwise order pointing downwards
+                    val nextFaceIdx1 = if (thetaIdx == slices-1) { 1 } else { capFaceOffset + 1 }
+                    val capFace = Face(nextFaceIdx1, 0, capFaceOffset)
+                    capFaces.add(capFace)
+                    capFaceOffset ++
                     // Position
                     it[capOffset++] = x
                     it[capOffset++] = 0f
@@ -197,8 +203,8 @@ class Cone @JvmOverloads constructor(
 
             }
 
-            val coneMesh = Mesh(coneVertices, faces)
-            val capMesh = capVertices?.let { Mesh(it, capStride, GL_TRIANGLE_FAN) }
+            val coneMesh = Mesh(coneVertices, coneFaces)
+            val capMesh = capVertices?.let { Mesh(it, capFaces) }
 
             val meshes = mutableListOf<Mesh>()
             meshes.add(coneMesh)

@@ -4,8 +4,7 @@ import com.al10101.android.soleil.data.Quaternion
 import com.al10101.android.soleil.data.RGB
 import com.al10101.android.soleil.data.Vector
 import com.al10101.android.soleil.extensions.toModelMatrix
-import com.al10101.android.soleil.extensions.toVector
-import com.al10101.android.soleil.extensions.transform
+import com.al10101.android.soleil.models.Face
 import com.al10101.android.soleil.models.Mesh
 import com.al10101.android.soleil.models.Model
 import com.al10101.android.soleil.models.TOTAL_COMPONENTS_COUNT
@@ -59,27 +58,48 @@ class Sphere @JvmOverloads constructor(
         ): Mesh {
 
             val pi = PI.toFloat()
+            val stacksM1 = 1f / stacks.toFloat()
 
             // Coordinates:
             // XYZ RGBA XYZ ST
-            val vertices = FloatArray(TOTAL_COMPONENTS_COUNT * (slices * 2 + 2) * stacks)
+            // We do not consider first and last stack to contribute to the slices, since top
+            // and bottom part of the spheres don't have slices, only 1 point each
+            if (stacks < 3) {
+                throw IllegalArgumentException("The number of stacks in a sphere must be >= 3 ($stacks given)")
+            }
+            val vertices = FloatArray(TOTAL_COMPONENTS_COUNT * (slices * (stacks-2) + 2))
             var offset = 0
 
             // The outer loop, going from bottom-most stack (or the southern polar regions of our planet
             // or altitude of -90 degrees) and up to the northern pole, at +90 degrees
             for (phiIdx in 0 until stacks) {
 
-                // The first circle
-                val phi0 = pi * ( (phiIdx + 0).toFloat() * (1f / stacks.toFloat()) - 0.5f )
-
-                // The next, or second one
-                val phi1 = pi * ( (phiIdx + 1).toFloat() * (1f / stacks.toFloat()) - 0.5f )
+                val phi = pi * ( phiIdx.toFloat() * (1f / (stacks-1).toFloat()) - 0.5f )
 
                 // Pre-calculated values
-                val cosPhi0 = cos(phi0)
-                val sinPhi0 = sin(phi0)
-                val cosPhi1 = cos(phi1)
-                val sinPhi1 = sin(phi1)
+                val cosPhi0 = cos(phi)
+                val sinPhi0 = sin(phi)
+
+                if (phiIdx == 0 || phiIdx == stacks-1) {
+                    // Position
+                    vertices[offset++] = radius * cosPhi0
+                    vertices[offset++] = radius * sinPhi0
+                    vertices[offset++] = radius * cosPhi0
+                    // Color
+                    vertices[offset++] = rgb.r
+                    vertices[offset++] = rgb.g
+                    vertices[offset++] = rgb.b
+                    vertices[offset++] = alpha
+                    // Normal
+                    vertices[offset++] = cosPhi0
+                    vertices[offset++] = sinPhi0
+                    vertices[offset++] = cosPhi0
+                    // Texture
+                    vertices[offset++] = 0.5f
+                    vertices[offset++] = phiIdx.toFloat() * stacksM1
+                    // Skip the theta loop
+                    continue
+                }
 
                 // The inner loop, going from 0 to 360
                 for (thetaIdx in 0 until slices) {
@@ -89,9 +109,7 @@ class Sphere @JvmOverloads constructor(
                     val cosTheta = cos(theta)
                     val sinTheta = sin(theta)
                     val texX = thetaIdx.toFloat() * (1f / (slices - 1).toFloat())
-                    val stacksM1 = 1f / stacks.toFloat()
 
-                    // First triangle
                     // Position
                     vertices[offset++] = radius * cosPhi0 * cosTheta
                     vertices[offset++] = radius * sinPhi0
@@ -107,41 +125,61 @@ class Sphere @JvmOverloads constructor(
                     vertices[offset++] = cosPhi0 * sinTheta
                     // Texture
                     vertices[offset++] = texX
-                    vertices[offset++] = (phiIdx+0).toFloat() * stacksM1
-
-                    // Second triangle
-                    // Position
-                    vertices[offset++] = radius * cosPhi1 * cosTheta
-                    vertices[offset++] = radius * sinPhi1
-                    vertices[offset++] = radius * cosPhi1 * sinTheta
-                    // Color
-                    vertices[offset++] = rgb.r
-                    vertices[offset++] = rgb.g
-                    vertices[offset++] = rgb.b
-                    vertices[offset++] = alpha
-                    // Normal
-                    vertices[offset++] = cosPhi1 * cosTheta
-                    vertices[offset++] = sinPhi1
-                    vertices[offset++] = cosPhi1 * sinTheta
-                    // Texture
-                    vertices[offset++] = texX
-                    vertices[offset++] = (phiIdx+1).toFloat() * stacksM1
+                    vertices[offset++] = phiIdx.toFloat() * stacksM1
 
                 }
 
-                // Create a degenerate triangle to connect stacks and maintain winding order
-                vertices[offset + 12] = vertices[offset - 12] ; vertices[offset + 0] = vertices[offset + 12]
-                vertices[offset + 13] = vertices[offset - 11] ; vertices[offset + 1] = vertices[offset + 13]
-                vertices[offset + 14] = vertices[offset - 10] ; vertices[offset + 2] = vertices[offset + 14]
+            }
+
+            // We need to store all the faces, depending on the order of the vertices' computation
+            val faces = mutableListOf<Face>()
+            val lastIdx = slices * (stacks - 2) + 2 - 1 // Minus one because we do not count the first index=0
+            offset = 1 // Recycle the variable to count the indexes in the strips. Start at 1 because the 0 is
+            // at the bottom fan and is not used to count the strips
+
+            for (phiIdx in 0 until stacks) {
+
+                if (phiIdx == 0) {
+                    // If it is the fist phiIdx, compute it considering a fan with the idx=0 as the center
+                    for (thetaIdx in 0 until slices) {
+                        val nextFaceIdx = if (thetaIdx == slices-1) { 1 } else { thetaIdx + 1 }
+                        val bottomFan = Face(nextFaceIdx, 0, thetaIdx)
+                        faces.add(bottomFan)
+                    }
+                }
+
+                else if (phiIdx == stacks-1) {
+                    // If it is the last phiIdx, compute it considering a fan with the lastIdx as the center
+                    for (thetaIdx in 0 until slices) {
+                        val nextFaceIdx = if (thetaIdx == slices-1) { lastIdx - slices } else { lastIdx - (slices - thetaIdx) + 1 }
+                        val topFan = Face(lastIdx - (slices - thetaIdx), lastIdx, nextFaceIdx)
+                        faces.add(topFan)
+                    }
+                }
+
+                else if (phiIdx == stacks-2) {
+                    // Since all the strips consider the union between the current phiIdx and the
+                    // next phiIdx, the penultimate phiIdx shouldn't be considered since the last
+                    // phiIdx already considers that row. We skip it
+                    continue
+                }
+
+                else {
+                    for (thetaIdx in 0 until slices) {
+                        // Any other value for phiIdx is considered to be part of the strip triangles
+                        val nextBottomIdx = if (thetaIdx == slices - 1) { offset - (slices-1) } else { offset + 1 }
+                        val nextTopIdx = if (thetaIdx == slices - 1) { offset + 1 } else { offset + (slices+1) }
+                        val bottomTriangle = Face(offset, offset + slices, nextBottomIdx)
+                        val topTriangle = Face(nextBottomIdx, offset + slices, nextTopIdx)
+                        faces.add(bottomTriangle)
+                        faces.add(topTriangle)
+                        offset ++
+                    }
+                }
 
             }
 
-            // The rendering of this object will be made with the strip mode. That is,
-            // no faces are required, we only need that the vertices are in the same order of
-            // the strip/fan (which they are)
-            val totalFanElements = (slices + 1) * 2 * (stacks - 1) + 2
-
-            return Mesh(vertices, totalFanElements)
+            return Mesh(vertices, faces)
 
         }
 

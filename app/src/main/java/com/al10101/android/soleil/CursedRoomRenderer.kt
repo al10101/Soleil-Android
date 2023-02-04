@@ -4,7 +4,6 @@ import android.content.Context
 import android.opengl.GLES20.*
 import android.opengl.Matrix.multiplyMM
 import android.opengl.Matrix.multiplyMV
-import android.util.Log
 import com.al10101.android.soleil.custom.Controls
 import com.al10101.android.soleil.custom.DragMode
 import com.al10101.android.soleil.custom.TouchableGLRenderer

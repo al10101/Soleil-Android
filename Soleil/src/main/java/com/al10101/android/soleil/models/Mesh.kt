@@ -23,42 +23,12 @@ private const val STRIDE = TOTAL_COMPONENT_COUNT * BYTES_PER_FLOAT
 
 class Mesh constructor(
     vertexData: FloatArray,
-    private val nTotalElements: Int,
-    // As default, assume it renders with strip mode
-    var glPrimitivesMode: Int = GL_TRIANGLE_STRIP
+    faces: List<Face>
 ) {
 
+    private val nTotalElements = faces.size * 3
     private val nVertices = vertexData.size / TOTAL_COMPONENT_COUNT
-    private val vertexArray = VertexArray(vertexData)
-    // The vertex indices is not needed if it renders in strip or fan
-    private var vertexIndices: IntBuffer? = null
-    private var drawPrimitives = { drawContinuousArray() }
-
-    // As first secondary constructor, assume it renders with index mode.
-    // This mode is actually more common, but it cannot be used as default
-    // because it is a little bit more complex
-    constructor(
-        vertexData: FloatArray,
-        faces: List<Face>,
-    ): this(vertexData, faces.size * 3, GL_TRIANGLES) {
-
-        var offset = 0
-        val facesIndices = IntArray(nTotalElements)
-        faces.forEach {
-            facesIndices[offset++] = it.a
-            facesIndices[offset++] = it.b
-            facesIndices[offset++] = it.c
-        }
-
-        // If the rendering is indexed, we need the indices
-        vertexIndices = IntBuffer.allocate(nTotalElements).apply {
-            put(facesIndices)
-            position(0)
-        }
-
-        drawPrimitives = { drawIndexedElements() }
-
-    }
+    private val vertexArray = VertexArray(vertexData, faces)
 
     fun bindData(program: ShaderProgram) {
         var offset = 0
@@ -67,19 +37,19 @@ class Mesh constructor(
             offset, program.aPositionLocation,
             POSITION_COMPONENT_COUNT, STRIDE
         )
-        offset += POSITION_COMPONENT_COUNT
+        offset += POSITION_COMPONENT_COUNT * BYTES_PER_FLOAT
 
         vertexArray.setVertexAttribPointer(
             offset, program.aColorLocation,
             COLOR_COMPONENT_COUNT, STRIDE
         )
-        offset += COLOR_COMPONENT_COUNT
+        offset += COLOR_COMPONENT_COUNT * BYTES_PER_FLOAT
 
         vertexArray.setVertexAttribPointer(
             offset, program.aNormalLocation,
             NORMAL_COMPONENT_COUNT, STRIDE
         )
-        offset += NORMAL_COMPONENT_COUNT
+        offset += NORMAL_COMPONENT_COUNT * BYTES_PER_FLOAT
 
         vertexArray.setVertexAttribPointer(
             offset, program.aTextureCoordinatesLocation,
@@ -89,17 +59,13 @@ class Mesh constructor(
     }
 
     fun draw() {
-        drawPrimitives()
+        drawIndexedElements()
     }
 
     private fun drawIndexedElements() {
-        // nTotalElements here is the number of faces multiplied by 3
-        glDrawElements(glPrimitivesMode, nTotalElements, GL_UNSIGNED_INT, vertexIndices!!)
-    }
-
-    private fun drawContinuousArray() {
-        // nTotalElements here is the number of fan elements initialized in the constructor
-        glDrawArrays(glPrimitivesMode, 0, nTotalElements)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vertexArray.ibo)
+        glDrawElements(GL_TRIANGLES, nTotalElements, GL_UNSIGNED_SHORT, 0)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
     }
 
     private fun updateVertexArray(vertexData: FloatArray, start: Int, count: Int) {

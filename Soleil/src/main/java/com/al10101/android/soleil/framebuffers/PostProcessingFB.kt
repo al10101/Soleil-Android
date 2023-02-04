@@ -8,7 +8,7 @@ import com.al10101.android.soleil.programs.ShaderProgram
 import com.al10101.android.soleil.uniforms.Uniforms
 import com.al10101.android.soleil.utils.FRAME_BUFFERS_TAG
 
-open class PostProcessingFB(
+class PostProcessingFB(
     shaderProgram: ShaderProgram,
     fbWidth: Int,
     fbHeight: Int,

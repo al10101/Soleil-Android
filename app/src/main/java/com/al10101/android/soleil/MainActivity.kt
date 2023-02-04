@@ -15,7 +15,7 @@ class MainActivity: AppCompatActivity() {
 
         glView = TouchableGLView(this)
         glView.setEGLContextClientVersion(2)
-        glView.setRenderer(CursedRoomRenderer(this))
+        glView.setRenderer(SnowmanRenderer(this))
         rendererSet = true
 
         setContentView(glView)

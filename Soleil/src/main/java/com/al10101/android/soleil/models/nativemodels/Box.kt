@@ -4,6 +4,7 @@ import com.al10101.android.soleil.data.Quaternion
 import com.al10101.android.soleil.data.RGB
 import com.al10101.android.soleil.data.Vector
 import com.al10101.android.soleil.extensions.toModelMatrix
+import com.al10101.android.soleil.extensions.updatePositionAndNormal
 import com.al10101.android.soleil.models.Face
 import com.al10101.android.soleil.models.Mesh
 import com.al10101.android.soleil.models.Model
@@ -24,7 +25,7 @@ class Box @JvmOverloads constructor(
 
     init {
 
-        val boxMeshes = computeDefaultMeshes(width, height, depth, rgb, alpha)
+        val boxMeshes = getMeshes(width, height, depth, rgb, alpha, Vector.zero, Quaternion.upY, Vector.one)
         boxMeshes.forEach {
             meshes.add(it)
             meshIdxWithProgram.add(0) // index (mesh) 0 with program 0
@@ -54,9 +55,10 @@ class Box @JvmOverloads constructor(
 
     companion object {
 
-        fun computeDefaultMeshes(
+        fun getMeshes(
             width: Float, height: Float, depth: Float,
-            rgb: RGB, alpha: Float
+            rgb: RGB, alpha: Float,
+            position: Vector, rotation: Quaternion, scale: Vector
         ): List<Mesh> {
 
             val x = width / 2f
@@ -120,6 +122,16 @@ class Box @JvmOverloads constructor(
                 Face(0, 2, 3)
             )
 
+            // Modify the arrays before passing them to the mesh
+            val temp = FloatArray(4)
+            val modelMatrix = FloatArray(16).apply { toModelMatrix(position, rotation, scale) }
+            leftFan.updatePositionAndNormal(position, modelMatrix, temp)
+            rightFan.updatePositionAndNormal(position, modelMatrix, temp)
+            frontFan.updatePositionAndNormal(position, modelMatrix, temp)
+            backFan.updatePositionAndNormal(position, modelMatrix, temp)
+            topFan.updatePositionAndNormal(position, modelMatrix, temp)
+            bottomFan.updatePositionAndNormal(position, modelMatrix, temp)
+
             val meshes: MutableList<Mesh> = mutableListOf()
             meshes.apply {
                 add( Mesh(leftFan, faces) )
@@ -131,27 +143,6 @@ class Box @JvmOverloads constructor(
             }
 
             return meshes
-
-        }
-
-        fun getMeshes(
-            width: Float, height: Float, depth: Float,
-            rgb: RGB, alpha: Float,
-            position: Vector, rotation: Quaternion, scale: Vector
-        ): List<Mesh> {
-
-            // Default meshes defined at origin
-            val boxMeshes = computeDefaultMeshes(width, height, depth, rgb, alpha)
-
-            // Declare transformation variables
-            val temp = FloatArray(4)
-            val modelMatrix = FloatArray(16).apply { toModelMatrix(position, rotation, scale) }
-
-            boxMeshes.forEach {
-                it.updatePositionAndNormal(position, modelMatrix, temp)
-            }
-
-            return boxMeshes
 
         }
 

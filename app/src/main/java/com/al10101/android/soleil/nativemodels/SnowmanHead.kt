@@ -66,7 +66,7 @@ class SnowmanHead(
         val transparency = 1f
 
         // We can define all meshes now
-        Sphere.getMesh(resolution, resolution, topRadius, rgb=headColor, alpha=1f,
+        Sphere.getMesh(resolution, resolution, radius, rgb=headColor, alpha=1f,
             position=headPosition, rotation= Quaternion.upY, scale= Vector.one
         ).let { head ->
             super.meshes.add(head)

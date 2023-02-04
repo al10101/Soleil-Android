@@ -11,16 +11,8 @@ private const val BYTES_PER_SHORT = 2
 
 class VertexArray(vertexData: FloatArray, faces: List<Face>) {
 
-    private val vertexBuffer = ByteBuffer
-        .allocateDirect(vertexData.size * BYTES_PER_FLOAT)
-        .order(ByteOrder.nativeOrder())
-        .asFloatBuffer().apply {
-            put(vertexData)
-            position(0)
-        }
-
     private val vbo: Int
-    val ibo: Int
+    val ibo: Int // It is not private because the Mesh.draw() method needs it
 
     init {
         var offset = 0
@@ -30,7 +22,14 @@ class VertexArray(vertexData: FloatArray, faces: List<Face>) {
             facesIndices[offset++] = it.b.toShort()
             facesIndices[offset++] = it.c.toShort()
         }
-        // Fill native memory
+        // Fill native memory with vertex and index elements
+        val vertexBuffer = ByteBuffer
+            .allocateDirect(vertexData.size * BYTES_PER_FLOAT)
+            .order(ByteOrder.nativeOrder())
+            .asFloatBuffer().apply {
+                put(vertexData)
+                position(0)
+            }
         val indexBuffer = ByteBuffer
             .allocateDirect(facesIndices.size * BYTES_PER_SHORT)
             .order(ByteOrder.nativeOrder())
@@ -69,26 +68,6 @@ class VertexArray(vertexData: FloatArray, faces: List<Face>) {
             dataOffset
         )
         glBindBuffer(GL_ARRAY_BUFFER, 0)
-    }
-
-    fun updateBuffer(vertexData: FloatArray, start: Int, count: Int) {
-        vertexBuffer.position(start)
-        vertexBuffer.put(vertexData, start, count)
-        vertexBuffer.position(0)
-    }
-
-    fun updateBuffer(vertexData: FloatArray, start: Int) {
-        vertexBuffer.position(start)
-        vertexBuffer.put(vertexData)
-        vertexBuffer.position(0)
-    }
-
-    fun readBuffer(start: Int, count: Int): FloatArray {
-        val vertexData = FloatArray(count)
-        vertexBuffer.position(start)
-        vertexBuffer.get(vertexData)
-        vertexBuffer.position(0)
-        return vertexData
     }
 
 }

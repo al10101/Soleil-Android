@@ -4,10 +4,8 @@ import com.al10101.android.soleil.data.Quaternion
 import com.al10101.android.soleil.data.RGB
 import com.al10101.android.soleil.data.Vector
 import com.al10101.android.soleil.extensions.toModelMatrix
-import com.al10101.android.soleil.models.Face
-import com.al10101.android.soleil.models.Mesh
-import com.al10101.android.soleil.models.Model
-import com.al10101.android.soleil.models.TOTAL_COMPONENTS_COUNT
+import com.al10101.android.soleil.extensions.updatePositionAndNormal
+import com.al10101.android.soleil.models.*
 import com.al10101.android.soleil.nodes.ChildNode
 import com.al10101.android.soleil.programs.ShaderProgram
 import kotlin.math.PI
@@ -28,7 +26,7 @@ class Sphere @JvmOverloads constructor(
 
     init {
 
-        val sphereMesh = computeDefaultMesh(stacks, slices, radius, rgb, alpha)
+        val sphereMesh = getMesh(stacks, slices, radius, rgb, alpha, Vector.zero, Quaternion.upY, Vector.one)
         meshes.add(sphereMesh)
 
         // Also add the program to the model
@@ -52,9 +50,10 @@ class Sphere @JvmOverloads constructor(
 
     companion object {
 
-        fun computeDefaultMesh(
+        fun getMesh(
             stacks: Int, slices: Int, radius: Float,
-            rgb: RGB, alpha: Float
+            rgb: RGB, alpha: Float,
+            position: Vector, rotation: Quaternion, scale: Vector
         ): Mesh {
 
             val pi = PI.toFloat()
@@ -67,7 +66,7 @@ class Sphere @JvmOverloads constructor(
             if (stacks < 3) {
                 throw IllegalArgumentException("The number of stacks in a sphere must be >= 3 ($stacks given)")
             }
-            val vertices = FloatArray(TOTAL_COMPONENTS_COUNT * (slices * (stacks-2) + 2))
+            val vertices = FloatArray(TOTAL_COMPONENT_COUNT * (slices * (stacks-2) + 2))
             var offset = 0
 
             // The outer loop, going from bottom-most stack (or the southern polar regions of our planet
@@ -179,28 +178,12 @@ class Sphere @JvmOverloads constructor(
 
             }
 
-            return Mesh(vertices, faces)
-
-        }
-
-        fun getMesh(
-            stacks: Int, slices: Int, radius: Float,
-            rgb: RGB, alpha: Float,
-            position: Vector,
-            rotation: Quaternion,
-            scale: Vector
-        ): Mesh {
-
-            // Default mesh defined at origin
-            val sphereMesh = computeDefaultMesh(stacks, slices, radius, rgb, alpha)
-
-            // Declare transformation variables
+            // Modify the array before passing it to the mesh
             val temp = FloatArray(4)
             val modelMatrix = FloatArray(16).apply { toModelMatrix(position, rotation, scale) }
+            vertices.updatePositionAndNormal(position, modelMatrix, temp)
 
-            sphereMesh.updatePositionAndNormal(position, modelMatrix, temp)
-
-            return sphereMesh
+            return Mesh(vertices, faces)
 
         }
 

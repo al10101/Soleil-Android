@@ -11,15 +11,15 @@ import com.al10101.android.soleil.programs.ShaderProgram
 import com.al10101.android.soleil.utils.BYTES_PER_FLOAT
 import java.nio.IntBuffer
 
-private const val POSITION_COMPONENT_COUNT = 3
-private const val COLOR_COMPONENT_COUNT = 4
-private const val NORMAL_COMPONENT_COUNT = 3
-private const val TEXTURE_COORDINATES_COMPONENT_COUNT = 2
-private const val TOTAL_COMPONENT_COUNT = POSITION_COMPONENT_COUNT +
+const val POSITION_COMPONENT_COUNT = 3
+const val COLOR_COMPONENT_COUNT = 4
+const val NORMAL_COMPONENT_COUNT = 3
+const val TEXTURE_COORDINATES_COMPONENT_COUNT = 2
+const val TOTAL_COMPONENT_COUNT = POSITION_COMPONENT_COUNT +
         COLOR_COMPONENT_COUNT +
         NORMAL_COMPONENT_COUNT +
         TEXTURE_COORDINATES_COMPONENT_COUNT
-private const val STRIDE = TOTAL_COMPONENT_COUNT * BYTES_PER_FLOAT
+const val STRIDE = TOTAL_COMPONENT_COUNT * BYTES_PER_FLOAT
 
 class Mesh constructor(
     vertexData: FloatArray,
@@ -27,7 +27,6 @@ class Mesh constructor(
 ) {
 
     private val nTotalElements = faces.size * 3
-    private val nVertices = vertexData.size / TOTAL_COMPONENT_COUNT
     private val vertexArray = VertexArray(vertexData, faces)
 
     fun bindData(program: ShaderProgram) {
@@ -66,72 +65,6 @@ class Mesh constructor(
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vertexArray.ibo)
         glDrawElements(GL_TRIANGLES, nTotalElements, GL_UNSIGNED_SHORT, 0)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
-    }
-
-    private fun updateVertexArray(vertexData: FloatArray, start: Int, count: Int) {
-        vertexArray.updateBuffer(vertexData, start, count)
-    }
-
-    private fun updateVertexArray(vertexData: FloatArray, start: Int) {
-        vertexArray.updateBuffer(vertexData, start)
-    }
-
-    private fun readVertexArray(start: Int, count: Int): FloatArray {
-        return vertexArray.readBuffer(start, count)
-    }
-
-    fun updatePositionAndNormal(position: Vector, modelMatrix: FloatArray, temp: FloatArray) {
-
-        var transformedVector: Vector
-
-        for (i in 0 until nVertices) {
-
-            // Read the original value, transform and update the vertex array
-            var start = i * TOTAL_COMPONENTS_COUNT
-            val originalPosition = this.readVertexArray(start, POSITION_COMPONENT_COUNT)
-            transformedVector = floatArrayOf(
-                originalPosition[0],
-                originalPosition[1],
-                originalPosition[2], 1f
-            ).apply { transform(modelMatrix, temp) }.toVector()
-            val transformedPosition = floatArrayOf(
-                transformedVector.x,
-                transformedVector.y,
-                transformedVector.z
-            )
-            this.updateVertexArray(transformedPosition, start)
-
-            start += POSITION_COMPONENT_COUNT + COLOR_COMPONENT_COUNT
-            val originalNormal = this.readVertexArray(start, NORMAL_COMPONENT_COUNT)
-            transformedVector = floatArrayOf(
-                originalNormal[0],
-                originalNormal[1],
-                originalNormal[2], 1f
-            ).apply { transform(modelMatrix, temp) }.toVector()
-                .sub(position).normalize()
-            val transformedNormal = floatArrayOf(
-                transformedVector.x,
-                transformedVector.y,
-                transformedVector.z
-            )
-            this.updateVertexArray(transformedNormal, start)
-
-        }
-
-    }
-
-    fun updateColor(rgb: RGB, alpha: Float = 1f) {
-
-        val colorArray = floatArrayOf(rgb.r, rgb.g, rgb.b, alpha)
-
-        for (i in 0 until nVertices) {
-
-            // Not necessary to read the original value, only replace the old ones
-            val start = i * TOTAL_COMPONENTS_COUNT + POSITION_COMPONENT_COUNT
-            this.updateVertexArray(colorArray, start)
-
-        }
-
     }
 
 }

@@ -4,10 +4,8 @@ import com.al10101.android.soleil.data.Quaternion
 import com.al10101.android.soleil.data.RGB
 import com.al10101.android.soleil.data.Vector
 import com.al10101.android.soleil.extensions.toModelMatrix
-import com.al10101.android.soleil.models.Face
-import com.al10101.android.soleil.models.Mesh
-import com.al10101.android.soleil.models.Model
-import com.al10101.android.soleil.models.TOTAL_COMPONENTS_COUNT
+import com.al10101.android.soleil.extensions.updatePositionAndNormal
+import com.al10101.android.soleil.models.*
 import com.al10101.android.soleil.nodes.ChildNode
 import com.al10101.android.soleil.programs.ShaderProgram
 import kotlin.math.PI
@@ -30,7 +28,7 @@ class Cone @JvmOverloads constructor(
 
     init {
 
-        val coneMeshes = computeDefaultMeshes(height, slices, radius, cap, rgb, alpha)
+        val coneMeshes = getMeshes(height, slices, radius, cap, rgb, alpha, Vector.zero, Quaternion.upY, Vector.one)
         coneMeshes.forEach {
             meshes.add(it)
             meshIdxWithProgram.add(0) // index (mesh) 0 with program 0
@@ -60,9 +58,21 @@ class Cone @JvmOverloads constructor(
 
     companion object {
 
-        fun computeDefaultMeshes(
+        fun getMeshes(
             height: Float, slices: Int, radius: Float,
-            cap: Boolean, rgb: RGB, alpha: Float
+            cap: Boolean, rgb: RGB, alpha: Float,
+            position: Vector, rotation: Quaternion, scale: Vector
+        ): List<Mesh> {
+            // Compute model matrix and pass everything to the direct computation
+            val temp = FloatArray(4)
+            val modelMatrix = FloatArray(16).apply { toModelMatrix(position, rotation, scale) }
+            return getMeshes(height, slices, radius, cap, rgb, alpha, position, modelMatrix, temp)
+        }
+
+        fun getMeshes(
+            height: Float, slices: Int, radius: Float,
+            cap: Boolean, rgb: RGB, alpha: Float,
+            position: Vector, modelMatrix: FloatArray, temp: FloatArray
         ): List<Mesh> {
 
             val pi = PI.toFloat()
@@ -94,11 +104,11 @@ class Cone @JvmOverloads constructor(
             var capFaceOffset = 0
 
             // This model will contain 2 meshes, so we initialize 2 vertex arrays
-            val coneVertices = FloatArray(TOTAL_COMPONENTS_COUNT * coneStride)
+            val coneVertices = FloatArray(TOTAL_COMPONENT_COUNT * coneStride)
             var capVertices: FloatArray? = null
 
             if (cap) {
-                capVertices = FloatArray(TOTAL_COMPONENTS_COUNT * capStride)
+                capVertices = FloatArray(TOTAL_COMPONENT_COUNT * capStride)
             }
 
             var coneOffset = 0
@@ -203,6 +213,10 @@ class Cone @JvmOverloads constructor(
 
             }
 
+            // Modify the arrays before passing them to the mesh
+            coneVertices.updatePositionAndNormal(position, modelMatrix, temp)
+            capVertices?.updatePositionAndNormal(position, modelMatrix, temp)
+
             val coneMesh = Mesh(coneVertices, coneFaces)
             val capMesh = capVertices?.let { Mesh(it, capFaces) }
 
@@ -211,27 +225,6 @@ class Cone @JvmOverloads constructor(
             capMesh?.let { meshes.add(it) }
 
             return meshes
-
-        }
-
-        fun getMeshes(
-            height: Float, slices: Int, radius: Float,
-            cap: Boolean, rgb: RGB, alpha: Float,
-            position: Vector, rotation: Quaternion, scale: Vector
-        ): List<Mesh> {
-
-            // Default meshes defined at origin
-            val coneMeshes = computeDefaultMeshes(height, slices, radius, cap, rgb, alpha)
-
-            // Declare transformation variables
-            val temp = FloatArray(4)
-            val modelMatrix = FloatArray(16).apply { toModelMatrix(position, rotation, scale) }
-
-            coneMeshes.forEach {
-                it.updatePositionAndNormal(position, modelMatrix, temp)
-            }
-
-            return coneMeshes
 
         }
 

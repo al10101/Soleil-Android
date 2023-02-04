@@ -3,13 +3,13 @@ package com.al10101.android.soleil.models
 import android.util.Log
 import com.al10101.android.soleil.data.Quaternion
 import com.al10101.android.soleil.data.Vector
+import com.al10101.android.soleil.extensions.toVector
+import com.al10101.android.soleil.extensions.transform
 import com.al10101.android.soleil.nodes.ChildNode
 import com.al10101.android.soleil.nodes.RootNode
 import com.al10101.android.soleil.uniforms.Uniforms
 import com.al10101.android.soleil.programs.ShaderProgram
 import com.al10101.android.soleil.utils.MODELS_TAG
-
-const val TOTAL_COMPONENTS_COUNT = 12
 
 open class Model(
     override val name: String

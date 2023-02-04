@@ -4,6 +4,9 @@ import android.opengl.Matrix
 import android.opengl.Matrix.*
 import com.al10101.android.soleil.data.Quaternion
 import com.al10101.android.soleil.data.Vector
+import com.al10101.android.soleil.models.COLOR_COMPONENT_COUNT
+import com.al10101.android.soleil.models.POSITION_COMPONENT_COUNT
+import com.al10101.android.soleil.models.TOTAL_COMPONENT_COUNT
 import com.al10101.android.soleil.utils.RADIANS_TO_DEGREES
 import kotlin.math.acos
 
@@ -167,4 +170,48 @@ fun FloatArray.transform(modelMatrix: FloatArray, temp: FloatArray) {
     this[1] = temp[1]
     this[2] = temp[2]
     this[3] = temp[3]
+}
+
+fun FloatArray.updatePositionAndNormal(
+    position: Vector, modelMatrix: FloatArray, temp: FloatArray
+) {
+
+    var transformedVector: Vector
+    val nVertices = this.size / TOTAL_COMPONENT_COUNT
+
+    for (i in 0 until nVertices) {
+
+        // Read the original value, transform and update the vertex array
+        var start = i * TOTAL_COMPONENT_COUNT
+        val originalPosition = floatArrayOf(
+            this[start+0],
+            this[start+1],
+            this[start+2]
+        )
+        transformedVector = floatArrayOf(
+            originalPosition[0],
+            originalPosition[1],
+            originalPosition[2], 1f
+        ).apply { transform(modelMatrix, temp) }.toVector()
+        this[start+0] = transformedVector.x
+        this[start+1] = transformedVector.y
+        this[start+2] = transformedVector.z
+
+        start += POSITION_COMPONENT_COUNT + COLOR_COMPONENT_COUNT
+        val originalNormal = floatArrayOf(
+            this[start+0],
+            this[start+1],
+            this[start+2]
+        )
+        transformedVector = floatArrayOf(
+            originalNormal[0],
+            originalNormal[1],
+            originalNormal[2], 1f
+        ).apply { transform(modelMatrix, temp) }.toVector()
+            .sub(position).normalize()
+        this[start+0] = transformedVector.x
+        this[start+1] = transformedVector.y
+        this[start+2] = transformedVector.z
+
+    }
 }

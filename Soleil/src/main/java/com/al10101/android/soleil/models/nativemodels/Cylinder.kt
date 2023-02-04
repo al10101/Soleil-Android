@@ -4,10 +4,8 @@ import com.al10101.android.soleil.data.Quaternion
 import com.al10101.android.soleil.data.RGB
 import com.al10101.android.soleil.data.Vector
 import com.al10101.android.soleil.extensions.toModelMatrix
-import com.al10101.android.soleil.models.Face
-import com.al10101.android.soleil.models.Mesh
-import com.al10101.android.soleil.models.Model
-import com.al10101.android.soleil.models.TOTAL_COMPONENTS_COUNT
+import com.al10101.android.soleil.extensions.updatePositionAndNormal
+import com.al10101.android.soleil.models.*
 import com.al10101.android.soleil.nodes.ChildNode
 import com.al10101.android.soleil.programs.ShaderProgram
 import kotlin.math.PI
@@ -30,7 +28,7 @@ class Cylinder @JvmOverloads constructor(
 
     init {
 
-        val cylinderMeshes = computeDefaultMeshes(height, slices, radius, bottomCap, topCap, rgb, alpha)
+        val cylinderMeshes = getMeshes(height, slices, radius, bottomCap, topCap, rgb, alpha, Vector.zero, Quaternion.upY, Vector.one)
         cylinderMeshes.forEach {
             meshes.add(it)
             meshIdxWithProgram.add(0) // index (mesh) 0 with program 0
@@ -60,10 +58,23 @@ class Cylinder @JvmOverloads constructor(
 
     companion object {
 
-        fun computeDefaultMeshes(
+        fun getMeshes(
             height: Float, slices: Int, radius: Float,
             bottomCap: Boolean, topCap: Boolean,
-            rgb: RGB, alpha: Float
+            rgb: RGB, alpha: Float,
+            position: Vector, rotation: Quaternion, scale: Vector
+        ): List<Mesh> {
+            // Compute model matrix and pass everything to the direct computation
+            val temp = FloatArray(4)
+            val modelMatrix = FloatArray(16).apply { toModelMatrix(position, rotation, scale) }
+            return getMeshes(height, slices, radius, bottomCap, topCap, rgb, alpha, position, modelMatrix, temp)
+        }
+
+        fun getMeshes(
+            height: Float, slices: Int, radius: Float,
+            bottomCap: Boolean, topCap: Boolean,
+            rgb: RGB, alpha: Float,
+            position: Vector, modelMatrix: FloatArray, temp: FloatArray
         ): List<Mesh> {
 
             val pi = PI.toFloat()
@@ -84,15 +95,15 @@ class Cylinder @JvmOverloads constructor(
             val tubeFaces = mutableListOf<Face>()
 
             // The constructor defines the mesh
-            val tubeVertices = FloatArray(TOTAL_COMPONENTS_COUNT * tubeStride)
+            val tubeVertices = FloatArray(TOTAL_COMPONENT_COUNT * tubeStride)
             var bottomVertices: FloatArray? = null
             var topVertices: FloatArray? = null
 
             if (bottomCap) {
-                bottomVertices = FloatArray(TOTAL_COMPONENTS_COUNT * capStride)
+                bottomVertices = FloatArray(TOTAL_COMPONENT_COUNT * capStride)
             }
             if (topCap) {
-                topVertices = FloatArray(TOTAL_COMPONENTS_COUNT * capStride)
+                topVertices = FloatArray(TOTAL_COMPONENT_COUNT * capStride)
             }
 
             var tubeOffset = 0
@@ -244,6 +255,11 @@ class Cylinder @JvmOverloads constructor(
 
             }
 
+            // Modify the arrays before passing them to the mesh
+            topVertices?.updatePositionAndNormal(position, modelMatrix, temp)
+            tubeVertices.updatePositionAndNormal(position, modelMatrix, temp)
+            bottomVertices?.updatePositionAndNormal(position, modelMatrix, temp)
+
             // Declare meshes if not null
             val topMesh = topVertices?.let { Mesh(it, topFaces) }
             val tubeMesh = Mesh(tubeVertices, tubeFaces)
@@ -255,28 +271,6 @@ class Cylinder @JvmOverloads constructor(
             bottomMesh?.let { meshes.add(it) }
 
             return meshes
-
-        }
-
-        fun getMeshes(
-            height: Float, slices: Int, radius: Float,
-            bottomCap: Boolean, topCap: Boolean,
-            rgb: RGB, alpha: Float,
-            position: Vector, rotation: Quaternion, scale: Vector
-        ): List<Mesh> {
-
-            // Default meshes defined at origin
-            val cylinderMeshes = computeDefaultMeshes(height, slices, radius, bottomCap, topCap, rgb, alpha)
-
-            // Declare transformation variables
-            val temp = FloatArray(4)
-            val modelMatrix = FloatArray(16).apply { toModelMatrix(position, rotation, scale) }
-
-            cylinderMeshes.forEach {
-                it.updatePositionAndNormal(position, modelMatrix, temp)
-            }
-
-            return cylinderMeshes
 
         }
 

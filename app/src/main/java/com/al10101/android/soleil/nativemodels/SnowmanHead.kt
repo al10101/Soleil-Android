@@ -3,6 +3,9 @@ package com.al10101.android.soleil.nativemodels
 import com.al10101.android.soleil.data.Quaternion
 import com.al10101.android.soleil.data.RGB
 import com.al10101.android.soleil.data.Vector
+import com.al10101.android.soleil.models.Face
+import com.al10101.android.soleil.models.Mesh
+import com.al10101.android.soleil.models.MeshContainer
 import com.al10101.android.soleil.models.Model
 import com.al10101.android.soleil.models.nativemodels.Cone
 import com.al10101.android.soleil.models.nativemodels.Cylinder
@@ -18,6 +21,10 @@ class SnowmanHead(
 ): Model(name="SnowmanHead") {
 
     init {
+
+        // We will add the vertices and faces manually, from the vertices inside each mesh container
+        val verticesList = mutableListOf<Float>()
+        val faces = mutableListOf<Face>()
 
         // The hat has 3 cylinders: 2 for the hat itself and 1 for a little red ribbon
         //    _____
@@ -66,74 +73,65 @@ class SnowmanHead(
         val transparency = 1f
 
         // We can define all meshes now
-        Sphere.getMesh(resolution, resolution, radius, rgb=headColor, alpha=1f,
+        Sphere.getMeshContainer(resolution, resolution, radius, rgb=headColor, alpha=1f,
             position=headPosition, rotation= Quaternion.upY, scale= Vector.one
         ).let { head ->
-            super.meshes.add(head)
-            super.meshIdxWithProgram.add(0)
+            head.mergeDataTo(verticesList, faces)
         }
 
-        Cylinder.getMeshes(topHeight, resolution, topRadius,
+        Cylinder.getMeshContainer(topHeight, resolution, topRadius,
             bottomCap=false, topCap=true, rgb=hatColor, alpha=transparency,
             position=topPosition, rotation= Quaternion.upY, scale= Vector.one
-        ).let { topHatMeshes ->
-            topHatMeshes.forEach {
-                super.meshes.add(it)
-                super.meshIdxWithProgram.add(0)
-            }
+        ).let { topHatMesh ->
+            topHatMesh.mergeDataTo(verticesList, faces)
         }
 
-        Cylinder.getMeshes(baseHeight, resolution, baseRadius,
+        Cylinder.getMeshContainer(baseHeight, resolution, baseRadius,
             bottomCap=true, topCap=true, rgb=hatColor, alpha=transparency,
             position=basePosition, rotation= Quaternion.upY, scale= Vector.one
-        ).let { bottomHatMeshes ->
-            bottomHatMeshes.forEach {
-                super.meshes.add(it)
-                super.meshIdxWithProgram.add(0)
-            }
+        ).let { bottomHatMesh ->
+            bottomHatMesh.mergeDataTo(verticesList, faces)
         }
 
 
-        Cylinder.getMeshes(ribbonHeight, resolution, ribbonRadius,
+        Cylinder.getMeshContainer(ribbonHeight, resolution, ribbonRadius,
             bottomCap=false, topCap=true, rgb=ribbonColor, alpha=transparency,
             position=ribbonPosition, rotation= Quaternion.upY, scale= Vector.one
-        ).let { ribbonMeshes ->
-            ribbonMeshes.forEach {
-                super.meshes.add(it)
-                super.meshIdxWithProgram.add(0)
-            }
+        ).let { ribbonMesh ->
+            ribbonMesh.mergeDataTo(verticesList, faces)
         }
 
-        Sphere.getMesh(eyeResolution, eyeResolution, eyeRadius,
+        Sphere.getMeshContainer(eyeResolution, eyeResolution, eyeRadius,
             rgb=eyeColor, alpha=1f,
             position=rightEyePosition, rotation= Quaternion.upY, scale= Vector.one
         ).let { rightEye ->
-            super.meshes.add(rightEye)
-            super.meshIdxWithProgram.add(0)
+            rightEye.mergeDataTo(verticesList, faces)
         }
-        Sphere.getMesh(eyeResolution, eyeResolution, eyeRadius,
+
+        Sphere.getMeshContainer(eyeResolution, eyeResolution, eyeRadius,
             rgb=eyeColor, alpha=1f,
             position=leftEyePosition, rotation= Quaternion.upY, scale= Vector.one
         ).let { leftEye ->
-            super.meshes.add(leftEye)
-            super.meshIdxWithProgram.add(0)
+            leftEye.mergeDataTo(verticesList, faces)
         }
 
-        Cone.getMeshes(noseLength, resolution, noseRadius,
+        Cone.getMeshContainer(noseLength, resolution, noseRadius,
             cap=false, rgb=noseColor, alpha=transparency,
             position=nosePosition, rotation=Quaternion(Vector.unitY, Vector.unitZ), scale= Vector.one
-        ).let { noseMeshes ->
-            noseMeshes.forEach {
-                super.meshes.add(it)
-                super.meshIdxWithProgram.add(0)
-            }
+        ).let { noseMesh ->
+            noseMesh.mergeDataTo(verticesList, faces)
         }
+
+        // Add the data to a single mesh
+        val meshContainer = MeshContainer(verticesList.toFloatArray(), faces)
+        super.meshes.add(Mesh(meshContainer))
 
         // Add the only program and only child. No textures
         super.programs.add(program)
+        super.meshIdxWithProgram.add(0)
         super.add(
             ChildNode(Vector.zero, Quaternion.upY, Vector.one).apply {
-                super.meshes.indices.forEach { meshesIndices.add(it) }
+                meshesIndices.add(0) // <- This child is linked to the mesh nr. 0
             }
         )
 

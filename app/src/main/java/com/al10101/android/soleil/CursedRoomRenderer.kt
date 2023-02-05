@@ -70,6 +70,7 @@ class CursedRoomRenderer(private val context: Context): TouchableGLRenderer {
 
         // Set the models right away
         val redCylinder = Cylinder(2.4f, 40, 1.3f, sunlightProgram,
+            bottomCap = true, topCap = true,
             rgb = RGB.red,
             position = Vector(0f, 0f, 1f)
         )

@@ -7,6 +7,7 @@ import com.al10101.android.soleil.extensions.toModelMatrix
 import com.al10101.android.soleil.extensions.updatePositionAndNormal
 import com.al10101.android.soleil.models.Face
 import com.al10101.android.soleil.models.Mesh
+import com.al10101.android.soleil.models.MeshContainer
 import com.al10101.android.soleil.models.Model
 import com.al10101.android.soleil.nodes.ChildNode
 import com.al10101.android.soleil.programs.ShaderProgram
@@ -25,29 +26,23 @@ class Box @JvmOverloads constructor(
 
     init {
 
-        val boxMeshes = getMeshes(width, height, depth, rgb, alpha, Vector.zero, Quaternion.upY, Vector.one)
-        boxMeshes.forEach {
-            meshes.add(it)
-            meshIdxWithProgram.add(0) // index (mesh) 0 with program 0
-        }
+        val boxMeshContainer = getMeshContainer(width, height, depth, rgb, alpha, Vector.zero, Quaternion.upY, Vector.one)
+        meshes.add(boxMeshContainer.toMesh())
 
-        // All meshes linked to the only program
+        // Also add program to the model
         programs.add(program)
+        meshIdxWithProgram.add(0) // index (mesh) 0 with program 0
 
-        // Add the same texture to the 3 meshes
+        // Add the same texture to the mesh
         textureId?.let {
-            for (i in boxMeshes.indices) {
-                textureIds.add(it)
-                textureIdIdxWithMeshIdx.add(i) // texture idx i is linked to mesh idx i
-            }
+            textureIds.add(it)
+            textureIdIdxWithMeshIdx.add(0) // texture idx 0 is linked to mesh idx 0
         }
 
         // Link the only child to the mesh
         super.add(
             ChildNode(position, rotation, scale).apply {
-                for (i in boxMeshes.indices) {
-                    meshesIndices.add(i) // <- This child is linked to the mesh nr. 0
-                }
+                meshesIndices.add(0) // <- This child is linked to the mesh nr. 0
             }
         )
 
@@ -55,11 +50,22 @@ class Box @JvmOverloads constructor(
 
     companion object {
 
-        fun getMeshes(
+        fun getMeshContainer(
             width: Float, height: Float, depth: Float,
             rgb: RGB, alpha: Float,
             position: Vector, rotation: Quaternion, scale: Vector
-        ): List<Mesh> {
+        ): MeshContainer {
+            // Compute model matrix and pass everything to the direct computation
+            val temp = FloatArray(4)
+            val modelMatrix = FloatArray(16).apply { toModelMatrix(position, rotation, scale) }
+            return getMeshContainer(width, height, depth, rgb, alpha, position, modelMatrix, temp)
+        }
+
+        fun getMeshContainer(
+            width: Float, height: Float, depth: Float,
+            rgb: RGB, alpha: Float,
+            position: Vector, modelMatrix: FloatArray, temp: FloatArray
+        ): MeshContainer {
 
             val x = width / 2f
             val y = height / 2f
@@ -73,76 +79,52 @@ class Box @JvmOverloads constructor(
             // Order of the coordinates: XYZ RGBA XYZ ST
             // The coordinates are made so that the whole box shares the same texture
 
-            // Left -> always -x, the fan is in the YZ plane
-            val leftFan = floatArrayOf(
+            val vertices = floatArrayOf(
+                // Left -> always -x, the fan is in the YZ plane
                 -x, -y, -z, rgb.r, rgb.g, rgb.b, alpha, -1f,  0f,  0f, 0.00f, 0.33f,
                 -x,  y, -z, rgb.r, rgb.g, rgb.b, alpha, -1f,  0f,  0f, 0.00f, 0.66f,
                 -x,  y,  z, rgb.r, rgb.g, rgb.b, alpha, -1f,  0f,  0f, 0.25f, 0.66f,
-                -x, -y,  z, rgb.r, rgb.g, rgb.b, alpha, -1f,  0f,  0f, 0.25f, 0.33f
-            )
-            // Right -> always +x, the fan is in the inverted YZ plane
-            val rightFan = floatArrayOf(
+                -x, -y,  z, rgb.r, rgb.g, rgb.b, alpha, -1f,  0f,  0f, 0.25f, 0.33f,
+                // Right -> always +x, the fan is in the inverted YZ plane
                 x, -y,  z, rgb.r, rgb.g, rgb.b, alpha,  1f,  0f,  0f, 0.50f, 0.33f,
                 x,  y,  z, rgb.r, rgb.g, rgb.b, alpha,  1f,  0f,  0f, 0.50f, 0.66f,
                 x,  y, -z, rgb.r, rgb.g, rgb.b, alpha,  1f,  0f,  0f, 0.75f, 0.66f,
-                x, -y, -z, rgb.r, rgb.g, rgb.b, alpha,  1f,  0f,  0f, 0.75f, 0.33f
-            )
-            // Front -> always +z, the fan is in the XY plane
-            val frontFan = floatArrayOf(
+                x, -y, -z, rgb.r, rgb.g, rgb.b, alpha,  1f,  0f,  0f, 0.75f, 0.33f,
+                // Front -> always +z, the fan is in the XY plane
                 -x, -y,  z, rgb.r, rgb.g, rgb.b, alpha,  0f,  0f,  1f, 0.25f, 0.33f,
                 -x,  y,  z, rgb.r, rgb.g, rgb.b, alpha,  0f,  0f,  1f, 0.25f, 0.66f,
                  x,  y,  z, rgb.r, rgb.g, rgb.b, alpha,  0f,  0f,  1f, 0.50f, 0.66f,
-                 x, -y,  z, rgb.r, rgb.g, rgb.b, alpha,  0f,  0f,  1f, 0.50f, 0.33f
-            )
-            // Back -> always -z, the fan in in the inverted XY plane
-            val backFan = floatArrayOf(
+                 x, -y,  z, rgb.r, rgb.g, rgb.b, alpha,  0f,  0f,  1f, 0.50f, 0.33f,
+                // Back -> always -z, the fan in in the inverted XY plane
                  x, -y, -z, rgb.r, rgb.g, rgb.b, alpha,  0f,  0f, -1f, 0.75f, 0.33f,
                  x,  y, -z, rgb.r, rgb.g, rgb.b, alpha,  0f,  0f, -1f, 0.75f, 0.66f,
                 -x,  y, -z, rgb.r, rgb.g, rgb.b, alpha,  0f,  0f, -1f, 1.00f, 0.66f,
-                -x, -y, -z, rgb.r, rgb.g, rgb.b, alpha,  0f,  0f, -1f, 1.00f, 0.33f
-            )
-            // Top -> always +y, the fan is in XZ plane
-            val topFan = floatArrayOf(
+                -x, -y, -z, rgb.r, rgb.g, rgb.b, alpha,  0f,  0f, -1f, 1.00f, 0.33f,
+                // Top -> always +y, the fan is in XZ plane
                 -x,  y,  z, rgb.r, rgb.g, rgb.b, alpha,  0f,  1f,  0f, 0.25f, 0.66f,
                 -x,  y, -z, rgb.r, rgb.g, rgb.b, alpha,  0f,  1f,  0f, 0.25f, 1.00f,
                  x,  y, -z, rgb.r, rgb.g, rgb.b, alpha,  0f,  1f,  0f, 0.50f, 1.00f,
-                 x,  y,  z, rgb.r, rgb.g, rgb.b, alpha,  0f,  1f,  0f, 0.50f, 0.66f
-            )
-            // Bottom -> always -y, the fan is in inverted XZ plane
-            val bottomFan = floatArrayOf(
+                 x,  y,  z, rgb.r, rgb.g, rgb.b, alpha,  0f,  1f,  0f, 0.50f, 0.66f,
+                // Bottom -> always -y, the fan is in inverted XZ plane
                 -x, -y, -z, rgb.r, rgb.g, rgb.b, alpha,  0f, -1f,  0f, 0.25f, 0.00f,
                 -x, -y,  z, rgb.r, rgb.g, rgb.b, alpha,  0f, -1f,  0f, 0.25f, 0.33f,
                  x, -y,  z, rgb.r, rgb.g, rgb.b, alpha,  0f, -1f,  0f, 0.50f, 0.33f,
                  x, -y, -z, rgb.r, rgb.g, rgb.b, alpha,  0f, -1f,  0f, 0.50f, 0.00f
             )
 
-            // Since all coordinates are designed the same, all faces share the same fan order
-            val faces = listOf(
-                Face(0, 1, 2),
-                Face(0, 2, 3)
-            )
-
-            // Modify the arrays before passing them to the mesh
-            val temp = FloatArray(4)
-            val modelMatrix = FloatArray(16).apply { toModelMatrix(position, rotation, scale) }
-            leftFan.updatePositionAndNormal(position, modelMatrix, temp)
-            rightFan.updatePositionAndNormal(position, modelMatrix, temp)
-            frontFan.updatePositionAndNormal(position, modelMatrix, temp)
-            backFan.updatePositionAndNormal(position, modelMatrix, temp)
-            topFan.updatePositionAndNormal(position, modelMatrix, temp)
-            bottomFan.updatePositionAndNormal(position, modelMatrix, temp)
-
-            val meshes: MutableList<Mesh> = mutableListOf()
-            meshes.apply {
-                add( Mesh(leftFan, faces) )
-                add( Mesh(rightFan, faces) )
-                add( Mesh(frontFan, faces) )
-                add( Mesh(backFan, faces) )
-                add( Mesh(topFan, faces) )
-                add( Mesh(bottomFan, faces) )
+            // For every side of the box, the order to form it is [0, 1, 2] [0, 2, 3]
+            val faces = mutableListOf<Face>()
+            for (i in 0 until 6) {
+                val offset = i * 4
+                faces.add(Face(offset+0, offset+1, offset+2))
+                faces.add(Face(offset+0, offset+2, offset+3))
             }
 
-            return meshes
+
+            // Modify the arrays before passing them to the mesh
+            vertices.updatePositionAndNormal(position, modelMatrix, temp)
+
+            return MeshContainer(vertices, faces)
 
         }
 

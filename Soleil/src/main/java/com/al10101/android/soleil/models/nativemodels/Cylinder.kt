@@ -28,29 +28,23 @@ class Cylinder @JvmOverloads constructor(
 
     init {
 
-        val cylinderMeshes = getMeshes(height, slices, radius, bottomCap, topCap, rgb, alpha, Vector.zero, Quaternion.upY, Vector.one)
-        cylinderMeshes.forEach {
-            meshes.add(it)
-            meshIdxWithProgram.add(0) // index (mesh) 0 with program 0
-        }
+        val cylinderMeshContainer = getMeshContainer(height, slices, radius, bottomCap, topCap, rgb, alpha, Vector.zero, Quaternion.upY, Vector.one)
+        meshes.add(cylinderMeshContainer.toMesh())
 
-        // All meshes linked to the only program
+        // Also add the program to the model
         programs.add(program)
+        meshIdxWithProgram.add(0) // <- The program nr. 0 is linked to the mesh with index nr. 0
 
-        // Add the same texture to the 3 meshes
+        // Add the only texture to the only mesh
         textureId?.let {
-            for (i in cylinderMeshes.indices) {
-                textureIds.add(it)
-                textureIdIdxWithMeshIdx.add(i) // texture idx i is linked to mesh idx i
-            }
+            textureIds.add(it)
+            textureIdIdxWithMeshIdx.add(0)  // texture idx 0 is linked to mesh idx 0
         }
 
         // Link the only child to the mesh
         super.add(
             ChildNode(position, rotation, scale).apply {
-                for (i in cylinderMeshes.indices) {
-                    meshesIndices.add(i) // <- This child is linked to the mesh nr. 0
-                }
+                meshesIndices.add(0) // <- This child is linked to the mesh nr. 0
             }
         )
 
@@ -58,24 +52,24 @@ class Cylinder @JvmOverloads constructor(
 
     companion object {
 
-        fun getMeshes(
+        fun getMeshContainer(
             height: Float, slices: Int, radius: Float,
             bottomCap: Boolean, topCap: Boolean,
             rgb: RGB, alpha: Float,
             position: Vector, rotation: Quaternion, scale: Vector
-        ): List<Mesh> {
+        ): MeshContainer {
             // Compute model matrix and pass everything to the direct computation
             val temp = FloatArray(4)
             val modelMatrix = FloatArray(16).apply { toModelMatrix(position, rotation, scale) }
-            return getMeshes(height, slices, radius, bottomCap, topCap, rgb, alpha, position, modelMatrix, temp)
+            return getMeshContainer(height, slices, radius, bottomCap, topCap, rgb, alpha, position, modelMatrix, temp)
         }
 
-        fun getMeshes(
+        fun getMeshContainer(
             height: Float, slices: Int, radius: Float,
             bottomCap: Boolean, topCap: Boolean,
             rgb: RGB, alpha: Float,
             position: Vector, modelMatrix: FloatArray, temp: FloatArray
-        ): List<Mesh> {
+        ): MeshContainer {
 
             val pi = PI.toFloat()
 
@@ -89,188 +83,185 @@ class Cylinder @JvmOverloads constructor(
             // store the center of the circle
             val capStride = slices + 1
 
-            // We need to store the faces of all 3 meshes
-            val topFaces = mutableListOf<Face>()
-            val bottomFaces = mutableListOf<Face>()
-            val tubeFaces = mutableListOf<Face>()
-
-            // The constructor defines the mesh
-            val tubeVertices = FloatArray(TOTAL_COMPONENT_COUNT * tubeStride)
-            var bottomVertices: FloatArray? = null
-            var topVertices: FloatArray? = null
-
+            // The constructor defines the number of vertices for the mesh
+            var nVertices = tubeStride
             if (bottomCap) {
-                bottomVertices = FloatArray(TOTAL_COMPONENT_COUNT * capStride)
+                nVertices += capStride
             }
             if (topCap) {
-                topVertices = FloatArray(TOTAL_COMPONENT_COUNT * capStride)
+                nVertices += capStride
             }
 
-            var tubeOffset = 0
-            var bottomOffset = 0
-            var topOffset = 0
+            val vertices = FloatArray(TOTAL_COMPONENT_COUNT * nVertices)
+            val faces = mutableListOf<Face>()
+            var offset = 0
 
-            // Add the center to the bottom
-            bottomVertices?.let {
+            if (bottomCap) {
+                // Add the center to the bottom
                 // Position
-                it[bottomOffset++] = 0f
-                it[bottomOffset++] = 0f
-                it[bottomOffset++] = 0f
+                vertices[offset++] = 0f
+                vertices[offset++] = 0f
+                vertices[offset++] = 0f
                 // Color
-                it[bottomOffset++] = rgb.r
-                it[bottomOffset++] = rgb.g
-                it[bottomOffset++] = rgb.b
-                it[bottomOffset++] = alpha
+                vertices[offset++] = rgb.r
+                vertices[offset++] = rgb.g
+                vertices[offset++] = rgb.b
+                vertices[offset++] = alpha
                 // Normal
-                it[bottomOffset++] = 0f
-                it[bottomOffset++] = -1f
-                it[bottomOffset++] = 0f
+                vertices[offset++] = 0f
+                vertices[offset++] = -1f
+                vertices[offset++] = 0f
                 // Texture
-                it[bottomOffset++] = 0.5f
-                it[bottomOffset++] = 0.5f
+                vertices[offset++] = 0.5f
+                vertices[offset++] = 0.5f
+                // Add the borders of the fan. We repeat this circumference because
+                // the normals and texture coordinates are different
+                for (thetaIdx in 0 until slices) {
+                    // Pre-computed values
+                    val theta = -2f * pi * thetaIdx.toFloat() / (slices - 1).toFloat()
+                    val cosTheta = cos(theta)
+                    val sinTheta = sin(theta)
+                    val x = radius * cosTheta
+                    val z = radius * sinTheta
+                    // Position
+                    vertices[offset++] = x
+                    vertices[offset++] = 0f
+                    vertices[offset++] = z
+                    // Color
+                    vertices[offset++] = rgb.r
+                    vertices[offset++] = rgb.g
+                    vertices[offset++] = rgb.b
+                    vertices[offset++] = alpha
+                    // Normal
+                    vertices[offset++] = 0f
+                    vertices[offset++] = -1f
+                    vertices[offset++] = 0f
+                    // Texture
+                    vertices[offset++] = 0.5f + cosTheta * 0.5f
+                    vertices[offset++] = 0.5f + sinTheta * 0.5f
+                }
+            }
+
+            // Add two circumferences, 1 at bottom and 1 at top
+            for (i in 0 until 2) {
+                val texY = i.toFloat() // T coordinate for texture
+                val phi = height * i // either bottom (0f) or top (height)
+                for (thetaIdx in 0 until slices) {
+                    // Pre-computed values
+                    val theta = -2f * pi * thetaIdx.toFloat() / (slices - 1).toFloat()
+                    val cosTheta = cos(theta)
+                    val sinTheta = sin(theta)
+                    val x = radius * cosTheta
+                    val z = radius * sinTheta
+                    val texX = thetaIdx.toFloat() * (1f / (slices - 1).toFloat())
+                    // Position
+                    vertices[offset++] = x
+                    vertices[offset++] = phi
+                    vertices[offset++] = z
+                    // Color
+                    vertices[offset++] = rgb.r
+                    vertices[offset++] = rgb.g
+                    vertices[offset++] = rgb.b
+                    vertices[offset++] = alpha
+                    // Normal
+                    vertices[offset++] = cosTheta
+                    vertices[offset++] = 0f
+                    vertices[offset++] = sinTheta
+                    // Texture
+                    vertices[offset++] = texX
+                    vertices[offset++] = texY
+                }
             }
 
             // Add the center to the top
-            topVertices?.let {
+            if (topCap) {
                 // Position
-                it[topOffset++] = 0f
-                it[topOffset++] = height
-                it[topOffset++] = 0f
+                vertices[offset++] = 0f
+                vertices[offset++] = height
+                vertices[offset++] = 0f
                 // Color
-                it[topOffset++] = rgb.r
-                it[topOffset++] = rgb.g
-                it[topOffset++] = rgb.b
-                it[topOffset++] = alpha
+                vertices[offset++] = rgb.r
+                vertices[offset++] = rgb.g
+                vertices[offset++] = rgb.b
+                vertices[offset++] = alpha
                 // Normal
-                it[topOffset++] = 0f
-                it[topOffset++] = 1f
-                it[topOffset++] = 0f
+                vertices[offset++] = 0f
+                vertices[offset++] = 1f
+                vertices[offset++] = 0f
                 // Texture
-                it[topOffset++] = 0.5f
-                it[topOffset++] = 0.5f
+                vertices[offset++] = 0.5f
+                vertices[offset++] = 0.5f
+                // Add the borders of the fan. We repeat this circumference because
+                // the normals and texture coordinates are different
+                for (thetaIdx in 0 until slices) {
+                    // Pre-computed values
+                    val theta = -2f * pi * thetaIdx.toFloat() / (slices - 1).toFloat()
+                    val cosTheta = cos(theta)
+                    val sinTheta = sin(theta)
+                    val x = radius * cosTheta
+                    val z = radius * sinTheta
+                    // Position
+                    vertices[offset++] = x
+                    vertices[offset++] = height
+                    vertices[offset++] = z
+                    // Color
+                    vertices[offset++] = rgb.r
+                    vertices[offset++] = rgb.g
+                    vertices[offset++] = rgb.b
+                    vertices[offset++] = alpha
+                    // Normal
+                    vertices[offset++] = 0f
+                    vertices[offset++] = 1f
+                    vertices[offset++] = 0f
+                    // Texture
+                    vertices[offset++] = 0.5f + cosTheta * 0.5f
+                    vertices[offset++] = 0.5f + sinTheta * 0.5f
+                }
             }
 
+            // So the order of the vertices is:
+            // - bottom center
+            // - bottom circumference
+            // - top circumference
+            // - top center
+            offset = 0 // Recycle variable to count faces
+
+            // Add bottom fan pointing downwards
+            if (bottomCap) {
+                for (thetaIdx in 1 until slices) {
+                    val nextFaceIdx = if (thetaIdx == slices-1) { 1 } else { thetaIdx + 1 }
+                    val bottomFan = Face(nextFaceIdx, 0, thetaIdx)
+                    faces.add(bottomFan)
+                    offset ++
+                }
+                offset += 2 // Add 1 to account for the bottom center and 1 because we skipped idx=0
+            }
+
+            // Add tube strip
             for (thetaIdx in 0 until slices) {
+                val nextBottomIdx = if (thetaIdx == slices - 1) { offset - (slices-1) } else { offset + 1 }
+                val nextTopIdx = if (thetaIdx == slices - 1) { offset + 1 } else { offset + (slices+1) }
+                val bottomTriangle = Face(offset, offset + slices, nextBottomIdx)
+                val topTriangle = Face(nextBottomIdx, offset + slices, nextTopIdx)
+                faces.add(bottomTriangle)
+                faces.add(topTriangle)
+                offset ++
+            }
 
-                // Pre-computed values
-                val theta = -2f * pi * thetaIdx.toFloat() / (slices - 1).toFloat()
-                val cosTheta = cos(theta)
-                val sinTheta = sin(theta)
-                val x = radius * cosTheta
-                val z = radius * sinTheta
-                val texX = thetaIdx.toFloat() * (1f / (slices - 1).toFloat())
-
-                // First triangle of the tube, initialized at bottom -> origin
-                // Position
-                tubeVertices[tubeOffset++] = x
-                tubeVertices[tubeOffset++] = 0f
-                tubeVertices[tubeOffset++] = z
-                // Color
-                tubeVertices[tubeOffset++] = rgb.r
-                tubeVertices[tubeOffset++] = rgb.g
-                tubeVertices[tubeOffset++] = rgb.b
-                tubeVertices[tubeOffset++] = alpha
-                // Normal
-                tubeVertices[tubeOffset++] = cosTheta
-                tubeVertices[tubeOffset++] = 0f
-                tubeVertices[tubeOffset++] = sinTheta
-                // Texture
-                tubeVertices[tubeOffset++] = texX
-                tubeVertices[tubeOffset++] = 0f
-
-                // Second triangle of the tube, initialized at the top
-                // Position
-                tubeVertices[tubeOffset++] = x
-                tubeVertices[tubeOffset++] = height
-                tubeVertices[tubeOffset++] = z
-                // Color
-                tubeVertices[tubeOffset++] = rgb.r
-                tubeVertices[tubeOffset++] = rgb.g
-                tubeVertices[tubeOffset++] = rgb.b
-                tubeVertices[tubeOffset++] = alpha
-                // Normal
-                tubeVertices[tubeOffset++] = cosTheta
-                tubeVertices[tubeOffset++] = 0f
-                tubeVertices[tubeOffset++] = sinTheta
-                // Texture
-                tubeVertices[tubeOffset++] = texX
-                tubeVertices[tubeOffset++] = 1f
-
-                // Add the faces. If it is the last slice, close the strip
-                val nextCapFaceIdx = if (thetaIdx == slices-1) { 1 } else { thetaIdx + 1 }
-                val nextBottomTubeFaceIdx = if (thetaIdx == slices-1) { 0 } else { thetaIdx*2 + 2 }
-                val nextTopTubeFaceIdx = if (thetaIdx == slices-1) { 1 } else { thetaIdx*2 + 3 }
-
-                // Add the tube faces in GL_TRIANGLE_STRIP order
-                val bottomTriangle = Face(thetaIdx*2, thetaIdx*2 + 1, nextBottomTubeFaceIdx)
-                val topTriangle = Face(nextBottomTubeFaceIdx, thetaIdx*2 + 1, nextTopTubeFaceIdx)
-                tubeFaces.add(bottomTriangle)
-                tubeFaces.add(topTriangle)
-
-                // BottomCap
-                bottomVertices?.let {
-                    // Face maintaining counter clockwise order pointing downwards
-                    val bottomFace = Face(nextCapFaceIdx, 0, thetaIdx)
-                    bottomFaces.add(bottomFace)
-                    // Position
-                    it[bottomOffset++] = x
-                    it[bottomOffset++] = 0f
-                    it[bottomOffset++] = z
-                    // Color
-                    it[bottomOffset++] = rgb.r
-                    it[bottomOffset++] = rgb.g
-                    it[bottomOffset++] = rgb.b
-                    it[bottomOffset++] = alpha
-                    // Normal
-                    it[bottomOffset++] = 0f
-                    it[bottomOffset++] = -1f
-                    it[bottomOffset++] = 0f
-                    // Texture
-                    it[bottomOffset++] = 0.5f + cosTheta * 0.5f
-                    it[bottomOffset++] = 0.5f + sinTheta * 0.5f
+            // Add top fan
+            if (topCap) {
+                val lastIdx = nVertices - 1 // Minus one because we do not count the first index=0
+                for (thetaIdx in 0 until slices - 1) {
+                    val nextFaceIdx = if (thetaIdx == slices-1) { lastIdx - slices } else { lastIdx - (slices - thetaIdx) + 1 }
+                    val topFan = Face(lastIdx - (slices - thetaIdx), lastIdx, nextFaceIdx)
+                    faces.add(topFan)
                 }
-
-                // TopCap
-                topVertices?.let {
-                    // Face maintaining counter clockwise order pointing upwards
-                    val topFace = Face(thetaIdx, 0, nextCapFaceIdx)
-                    topFaces.add(topFace)
-                    // Position
-                    it[topOffset++] = x
-                    it[topOffset++] = height
-                    it[topOffset++] = z
-                    // Color
-                    it[topOffset++] = rgb.r
-                    it[topOffset++] = rgb.g
-                    it[topOffset++] = rgb.b
-                    it[topOffset++] = alpha
-                    // Normal
-                    it[topOffset++] = 0f
-                    it[topOffset++] = 1f
-                    it[topOffset++] = 0f
-                    // Texture
-                    it[topOffset++] = 0.5f + cosTheta * 0.5f
-                    it[topOffset++] = 0.5f + sinTheta * 0.5f
-                }
-
             }
 
             // Modify the arrays before passing them to the mesh
-            topVertices?.updatePositionAndNormal(position, modelMatrix, temp)
-            tubeVertices.updatePositionAndNormal(position, modelMatrix, temp)
-            bottomVertices?.updatePositionAndNormal(position, modelMatrix, temp)
+            vertices.updatePositionAndNormal(position, modelMatrix, temp)
 
-            // Declare meshes if not null
-            val topMesh = topVertices?.let { Mesh(it, topFaces) }
-            val tubeMesh = Mesh(tubeVertices, tubeFaces)
-            val bottomMesh = bottomVertices?.let { Mesh(it, bottomFaces) }
-
-            val meshes = mutableListOf<Mesh>()
-            meshes.add(tubeMesh)
-            topMesh?.let { meshes.add(it) }
-            bottomMesh?.let { meshes.add(it) }
-
-            return meshes
+            return MeshContainer(vertices, faces)
 
         }
 

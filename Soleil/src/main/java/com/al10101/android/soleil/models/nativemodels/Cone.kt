@@ -28,29 +28,23 @@ class Cone @JvmOverloads constructor(
 
     init {
 
-        val coneMeshes = getMeshes(height, slices, radius, cap, rgb, alpha, Vector.zero, Quaternion.upY, Vector.one)
-        coneMeshes.forEach {
-            meshes.add(it)
-            meshIdxWithProgram.add(0) // index (mesh) 0 with program 0
-        }
+        val coneMeshContainer = getMeshContainer(height, slices, radius, cap, rgb, alpha, Vector.zero, Quaternion.upY, Vector.one)
+        meshes.add(coneMeshContainer.toMesh())
 
-        // All meshes linked to the only program
+        // Also add the program to the model
         programs.add(program)
+        meshIdxWithProgram.add(0) // <- The program nr. 0 is linked to the mesh with index nr. 0
 
-        // Add the same texture to the 3 meshes
+        // Add the only texture to the only mesh
         textureId?.let {
-            for (i in coneMeshes.indices) {
-                textureIds.add(it)
-                textureIdIdxWithMeshIdx.add(i) // texture idx i is linked to mesh idx i
-            }
+            textureIds.add(it)
+            textureIdIdxWithMeshIdx.add(0)  // texture idx 0 is linked to mesh idx 0
         }
 
         // Link the only child to the mesh
         super.add(
             ChildNode(position, rotation, scale).apply {
-                for (i in coneMeshes.indices) {
-                    meshesIndices.add(i) // <- This child is linked to the mesh nr. 0
-                }
+                meshesIndices.add(0) // <- This child is linked to the mesh nr. 0
             }
         )
 
@@ -58,22 +52,22 @@ class Cone @JvmOverloads constructor(
 
     companion object {
 
-        fun getMeshes(
+        fun getMeshContainer(
             height: Float, slices: Int, radius: Float,
             cap: Boolean, rgb: RGB, alpha: Float,
             position: Vector, rotation: Quaternion, scale: Vector
-        ): List<Mesh> {
+        ): MeshContainer {
             // Compute model matrix and pass everything to the direct computation
             val temp = FloatArray(4)
             val modelMatrix = FloatArray(16).apply { toModelMatrix(position, rotation, scale) }
-            return getMeshes(height, slices, radius, cap, rgb, alpha, position, modelMatrix, temp)
+            return getMeshContainer(height, slices, radius, cap, rgb, alpha, position, modelMatrix, temp)
         }
 
-        fun getMeshes(
+        fun getMeshContainer(
             height: Float, slices: Int, radius: Float,
             cap: Boolean, rgb: RGB, alpha: Float,
             position: Vector, modelMatrix: FloatArray, temp: FloatArray
-        ): List<Mesh> {
+        ): MeshContainer {
 
             val pi = PI.toFloat()
 
@@ -98,44 +92,61 @@ class Cone @JvmOverloads constructor(
             // Vertices 0 and 2 are located at the bottom of the cone, the top of the cone is in the vertex
             // 1. Since we are doing this because we want each triangle with its own normal different from
             // the rest, we make sure to compute it separately. The faces will be added in each iteration
-            val coneFaces = mutableListOf<Face>()
-            val capFaces = mutableListOf<Face>()
-            var coneFaceOffset = 0
-            var capFaceOffset = 0
-
-            // This model will contain 2 meshes, so we initialize 2 vertex arrays
-            val coneVertices = FloatArray(TOTAL_COMPONENT_COUNT * coneStride)
-            var capVertices: FloatArray? = null
+            var nVertices = coneStride
+            if (cap) {
+                nVertices += capStride
+            }
+            val vertices = FloatArray(TOTAL_COMPONENT_COUNT * nVertices)
+            val faces = mutableListOf<Face>()
+            var offset = 0
 
             if (cap) {
-                capVertices = FloatArray(TOTAL_COMPONENT_COUNT * capStride)
-            }
-
-            var coneOffset = 0
-            var capOffset = 0
-
-            // Add the center to the cap
-            capVertices?.let {
+                // Add the center to the cap
                 // Position
-                it[capOffset++] = 0f
-                it[capOffset++] = 0f
-                it[capOffset++] = 0f
+                vertices[offset++] = 0f
+                vertices[offset++] = 0f
+                vertices[offset++] = 0f
                 // Color
-                it[capOffset++] = rgb.r
-                it[capOffset++] = rgb.g
-                it[capOffset++] = rgb.b
-                it[capOffset++] = alpha
+                vertices[offset++] = rgb.r
+                vertices[offset++] = rgb.g
+                vertices[offset++] = rgb.b
+                vertices[offset++] = alpha
                 // Normal
-                it[capOffset++] = 0f
-                it[capOffset++] = -1f
-                it[capOffset++] = 0f
+                vertices[offset++] = 0f
+                vertices[offset++] = -1f
+                vertices[offset++] = 0f
                 // Texture
-                it[capOffset++] = 0.5f
-                it[capOffset++] = 0.5f
+                vertices[offset++] = 0.5f
+                vertices[offset++] = 0.5f
+                // Add the borders of the fan. We repeat this circumference because the
+                // normals and texture coordinates are different
+                for (thetaIdx in 0 until slices) {
+                    // Pre-computed values
+                    val theta = -2f * pi * thetaIdx.toFloat() / (slices - 1).toFloat()
+                    val cosTheta = cos(theta)
+                    val sinTheta = sin(theta)
+                    val x = radius * cosTheta
+                    val z = radius * sinTheta
+                    // Position
+                    vertices[offset++] = x
+                    vertices[offset++] = 0f
+                    vertices[offset++] = z
+                    // Color
+                    vertices[offset++] = rgb.r
+                    vertices[offset++] = rgb.g
+                    vertices[offset++] = rgb.b
+                    vertices[offset++] = alpha
+                    // Normal
+                    vertices[offset++] = 0f
+                    vertices[offset++] = -1f
+                    vertices[offset++] = 0f
+                    // Texture
+                    vertices[offset++] = 0.5f + cosTheta * 0.5f
+                    vertices[offset++] = 0.5f + sinTheta * 0.5f
+                }
             }
 
             for (thetaIdx in 0 until slices) {
-
                 // Pre-computed values
                 val theta = -2f * pi * thetaIdx.toFloat() / (slices - 1).toFloat()
                 val cosTheta = cos(theta)
@@ -143,88 +154,74 @@ class Cone @JvmOverloads constructor(
                 val x = radius * cosTheta
                 val z = radius * sinTheta
                 val texX = thetaIdx.toFloat() * (1f / (slices - 1).toFloat())
-
                 // Bottom coordinates of the cone
                 // Position
-                coneVertices[coneOffset++] = x
-                coneVertices[coneOffset++] = 0f
-                coneVertices[coneOffset++] = z
+                vertices[offset++] = x
+                vertices[offset++] = 0f
+                vertices[offset++] = z
                 // Color
-                coneVertices[coneOffset++] = rgb.r
-                coneVertices[coneOffset++] = rgb.g
-                coneVertices[coneOffset++] = rgb.b
-                coneVertices[coneOffset++] = alpha
+                vertices[offset++] = rgb.r
+                vertices[offset++] = rgb.g
+                vertices[offset++] = rgb.b
+                vertices[offset++] = alpha
                 // Normal
-                coneVertices[coneOffset++] = -coneY * cosTheta
-                coneVertices[coneOffset++] = coneX
-                coneVertices[coneOffset++] = -coneY * sinTheta
+                vertices[offset++] = -coneY * cosTheta
+                vertices[offset++] = coneX
+                vertices[offset++] = -coneY * sinTheta
                 // Texture
-                coneVertices[coneOffset++] = texX
-                coneVertices[coneOffset++] = 0f
+                vertices[offset++] = texX
+                vertices[offset++] = 0f
 
                 // Top coordinates of the cone
                 // Position
-                coneVertices[coneOffset++] = 0f
-                coneVertices[coneOffset++] = height
-                coneVertices[coneOffset++] = 0f
+                vertices[offset++] = 0f
+                vertices[offset++] = height
+                vertices[offset++] = 0f
                 // Color
-                coneVertices[coneOffset++] = rgb.r
-                coneVertices[coneOffset++] = rgb.g
-                coneVertices[coneOffset++] = rgb.b
-                coneVertices[coneOffset++] = alpha
+                vertices[offset++] = rgb.r
+                vertices[offset++] = rgb.g
+                vertices[offset++] = rgb.b
+                vertices[offset++] = alpha
                 // Normal
-                coneVertices[coneOffset++] = -coneY * cosTheta
-                coneVertices[coneOffset++] = coneX
-                coneVertices[coneOffset++] = -coneY * sinTheta
+                vertices[offset++] = -coneY * cosTheta
+                vertices[offset++] = coneX
+                vertices[offset++] = -coneY * sinTheta
                 // Texture
-                coneVertices[coneOffset++] = 0.5f
-                coneVertices[coneOffset++] = 1f
-
-                // Add the faces. If it is the last slice, close the triangle with the first index
-                val nextFaceIdx = if (thetaIdx == slices-1) { 0 } else { coneFaceOffset + 2 }
-                val coneFace = Face(coneFaceOffset, coneFaceOffset+1, nextFaceIdx)
-                coneFaces.add(coneFace)
-                coneFaceOffset += 2
-
-                // Cap
-                capVertices?.let {
-                    // Face maintaining counter clockwise order pointing downwards
-                    val nextFaceIdx1 = if (thetaIdx == slices-1) { 1 } else { capFaceOffset + 1 }
-                    val capFace = Face(nextFaceIdx1, 0, capFaceOffset)
-                    capFaces.add(capFace)
-                    capFaceOffset ++
-                    // Position
-                    it[capOffset++] = x
-                    it[capOffset++] = 0f
-                    it[capOffset++] = z
-                    // Color
-                    it[capOffset++] = rgb.r
-                    it[capOffset++] = rgb.g
-                    it[capOffset++] = rgb.b
-                    it[capOffset++] = alpha
-                    // Normal
-                    it[capOffset++] = 0f
-                    it[capOffset++] = -1f
-                    it[capOffset++] = 0f
-                    // Texture
-                    it[capOffset++] = 0.5f + cosTheta * 0.5f
-                    it[capOffset++] = 0.5f + sinTheta * 0.5f
-                }
+                vertices[offset++] = 0.5f
+                vertices[offset++] = 1f
 
             }
 
+            // So the order of the vertices is
+            // - bottom center
+            // - bottom circumference
+            // - cone fan
+            offset = 0 // Recycle variable to count faces
+
+            // Add bottom fan pointing downwards
+            if (cap) {
+                for (thetaIdx in 1 until slices) {
+                    val nextFaceIdx = if (thetaIdx == slices-1) { 1 } else { thetaIdx + 1 }
+                    val bottomFan = Face(nextFaceIdx, 0, thetaIdx)
+                    faces.add(bottomFan)
+                    offset ++
+                }
+                offset += 2 // Add 1 to account for the bottom center and 1 because we skipped idx=0
+            }
+
+            // Add cone strip
+            val initOffset = offset
+            for (thetaIdx in 0 until slices - 1) {
+                val nextFaceIdx = if (thetaIdx == slices-1) { initOffset } else { offset + 2 }
+                val coneFan = Face(offset, offset+1, nextFaceIdx)
+                faces.add(coneFan)
+                offset += 2
+            }
+
             // Modify the arrays before passing them to the mesh
-            coneVertices.updatePositionAndNormal(position, modelMatrix, temp)
-            capVertices?.updatePositionAndNormal(position, modelMatrix, temp)
+            vertices.updatePositionAndNormal(position, modelMatrix, temp)
 
-            val coneMesh = Mesh(coneVertices, coneFaces)
-            val capMesh = capVertices?.let { Mesh(it, capFaces) }
-
-            val meshes = mutableListOf<Mesh>()
-            meshes.add(coneMesh)
-            capMesh?.let { meshes.add(it) }
-
-            return meshes
+            return MeshContainer(vertices, faces)
 
         }
 

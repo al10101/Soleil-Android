@@ -7,6 +7,7 @@ import com.al10101.android.soleil.extensions.toModelMatrix
 import com.al10101.android.soleil.extensions.updatePositionAndNormal
 import com.al10101.android.soleil.models.Face
 import com.al10101.android.soleil.models.Mesh
+import com.al10101.android.soleil.models.MeshContainer
 import com.al10101.android.soleil.models.Model
 import com.al10101.android.soleil.nodes.ChildNode
 import com.al10101.android.soleil.programs.ShaderProgram
@@ -28,8 +29,8 @@ class Quad @JvmOverloads constructor(
     init {
 
         // Add only 1 mesh to the RootNode
-        val quadMesh = getMesh(width, height, rgb, alpha, clipS, clipT, Vector.zero, Quaternion.upY, Vector.one)
-        meshes.add(quadMesh)
+        val quadMeshContainer = getMeshContainer(width, height, rgb, alpha, clipS, clipT, Vector.zero, Quaternion.upY, Vector.one)
+        meshes.add(quadMeshContainer.toMesh())
 
         // Also add the program to the model
         programs.add(program)
@@ -52,12 +53,24 @@ class Quad @JvmOverloads constructor(
 
     companion object {
 
-        fun getMesh(
+        fun getMeshContainer(
             width: Float, height: Float,
             rgb: RGB, alpha: Float,
             clipS: Float, clipT: Float,
             position: Vector, rotation: Quaternion, scale: Vector
-        ): Mesh {
+        ): MeshContainer {
+            // Compute model matrix and pass everything to the direct computation
+            val temp = FloatArray(4)
+            val modelMatrix = FloatArray(16).apply { toModelMatrix(position, rotation, scale) }
+            return getMeshContainer(width, height, rgb, alpha, clipS, clipT, position, modelMatrix, temp)
+        }
+
+        fun getMeshContainer(
+            width: Float, height: Float,
+            rgb: RGB, alpha: Float,
+            clipS: Float, clipT: Float,
+            position: Vector, modelMatrix: FloatArray, temp: FloatArray
+        ): MeshContainer {
 
             val wHalf = width / 2f
             val hHalf = height / 2f
@@ -72,8 +85,6 @@ class Quad @JvmOverloads constructor(
             )
 
             // Modify the array before passing it to the mesh
-            val temp = FloatArray(4)
-            val modelMatrix = FloatArray(16).apply { toModelMatrix(position, rotation, scale) }
             vertexData.updatePositionAndNormal(position, modelMatrix, temp)
 
             val faces = listOf(
@@ -81,7 +92,7 @@ class Quad @JvmOverloads constructor(
                 Face(0, 2, 3)
             )
 
-            return Mesh(vertexData, faces)
+            return MeshContainer(vertexData, faces)
 
         }
 

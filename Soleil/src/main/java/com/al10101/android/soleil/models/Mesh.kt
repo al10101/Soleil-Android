@@ -21,13 +21,10 @@ const val TOTAL_COMPONENT_COUNT = POSITION_COMPONENT_COUNT +
         TEXTURE_COORDINATES_COMPONENT_COUNT
 const val STRIDE = TOTAL_COMPONENT_COUNT * BYTES_PER_FLOAT
 
-class Mesh constructor(
-    vertexData: FloatArray,
-    faces: List<Face>
-) {
+class Mesh(meshContainer: MeshContainer) {
 
-    private val nTotalElements = faces.size * 3
-    private val vertexArray = VertexArray(vertexData, faces)
+    private val nTotalElements = meshContainer.faces.size * 3
+    private val vertexArray = VertexArray(meshContainer.vertexData, meshContainer.faces)
 
     fun bindData(program: ShaderProgram) {
         var offset = 0

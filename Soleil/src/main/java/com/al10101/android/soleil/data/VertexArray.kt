@@ -3,11 +3,11 @@ package com.al10101.android.soleil.data
 import android.opengl.GLES20.*
 import com.al10101.android.soleil.models.Face
 import com.al10101.android.soleil.utils.BYTES_PER_FLOAT
+import com.al10101.android.soleil.utils.BYTES_PER_INT
+import com.al10101.android.soleil.utils.BYTES_PER_SHORT
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.ShortBuffer
-
-private const val BYTES_PER_SHORT = 2
 
 class VertexArray(vertexData: FloatArray, faces: List<Face>) {
 
@@ -18,9 +18,9 @@ class VertexArray(vertexData: FloatArray, faces: List<Face>) {
         var offset = 0
         val facesIndices = ShortArray(faces.size * 3)
         faces.forEach {
-            facesIndices[offset++] = it.a.toShort()
-            facesIndices[offset++] = it.b.toShort()
-            facesIndices[offset++] = it.c.toShort()
+            facesIndices[offset++] = it.a
+            facesIndices[offset++] = it.b
+            facesIndices[offset++] = it.c
         }
         // Fill native memory with vertex and index elements
         val vertexBuffer = ByteBuffer

@@ -26,8 +26,8 @@ class Sphere @JvmOverloads constructor(
 
     init {
 
-        val sphereMesh = getMesh(stacks, slices, radius, rgb, alpha, Vector.zero, Quaternion.upY, Vector.one)
-        meshes.add(sphereMesh)
+        val sphereMeshContainer = getMeshContainer(stacks, slices, radius, rgb, alpha, Vector.zero, Quaternion.upY, Vector.one)
+        meshes.add(sphereMeshContainer.toMesh())
 
         // Also add the program to the model
         programs.add(program)
@@ -50,11 +50,22 @@ class Sphere @JvmOverloads constructor(
 
     companion object {
 
-        fun getMesh(
+        fun getMeshContainer(
             stacks: Int, slices: Int, radius: Float,
             rgb: RGB, alpha: Float,
             position: Vector, rotation: Quaternion, scale: Vector
-        ): Mesh {
+        ): MeshContainer {
+            // Compute model matrix and pass everything to the direct computation
+            val temp = FloatArray(4)
+            val modelMatrix = FloatArray(16).apply { toModelMatrix(position, rotation, scale) }
+            return getMeshContainer(stacks, slices, radius, rgb, alpha, position, modelMatrix, temp)
+        }
+
+        fun getMeshContainer(
+            stacks: Int, slices: Int, radius: Float,
+            rgb: RGB, alpha: Float,
+            position: Vector, modelMatrix: FloatArray, temp: FloatArray
+        ): MeshContainer {
 
             val pi = PI.toFloat()
             val stacksM1 = 1f / stacks.toFloat()
@@ -140,7 +151,7 @@ class Sphere @JvmOverloads constructor(
 
                 if (phiIdx == 0) {
                     // If it is the fist phiIdx, compute it considering a fan with the idx=0 as the center
-                    for (thetaIdx in 0 until slices) {
+                    for (thetaIdx in 1 until slices) {
                         val nextFaceIdx = if (thetaIdx == slices-1) { 1 } else { thetaIdx + 1 }
                         val bottomFan = Face(nextFaceIdx, 0, thetaIdx)
                         faces.add(bottomFan)
@@ -149,7 +160,7 @@ class Sphere @JvmOverloads constructor(
 
                 else if (phiIdx == stacks-1) {
                     // If it is the last phiIdx, compute it considering a fan with the lastIdx as the center
-                    for (thetaIdx in 0 until slices) {
+                    for (thetaIdx in 0 until slices - 1) {
                         val nextFaceIdx = if (thetaIdx == slices-1) { lastIdx - slices } else { lastIdx - (slices - thetaIdx) + 1 }
                         val topFan = Face(lastIdx - (slices - thetaIdx), lastIdx, nextFaceIdx)
                         faces.add(topFan)
@@ -179,11 +190,9 @@ class Sphere @JvmOverloads constructor(
             }
 
             // Modify the array before passing it to the mesh
-            val temp = FloatArray(4)
-            val modelMatrix = FloatArray(16).apply { toModelMatrix(position, rotation, scale) }
             vertices.updatePositionAndNormal(position, modelMatrix, temp)
 
-            return Mesh(vertices, faces)
+            return MeshContainer(vertices, faces)
 
         }
 

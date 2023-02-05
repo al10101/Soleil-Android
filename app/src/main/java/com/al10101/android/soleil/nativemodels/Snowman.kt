@@ -18,7 +18,7 @@ class Snowman(
 
     init {
 
-        val resolution = 40
+        val resolution = 6
 
         val head = SnowmanHead(program, resolution, 1f, Vector.zero)
 

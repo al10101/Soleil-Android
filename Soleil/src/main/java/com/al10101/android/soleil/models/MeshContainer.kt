@@ -1,13 +1,11 @@
 package com.al10101.android.soleil.models
 
+import com.al10101.android.soleil.utils.MAX_SHORT_VALUE
+
 data class MeshContainer(
     val vertexData: FloatArray,
     val faces: List<Face>
 ) {
-
-    // The maximum number that a short data type can store is 32767. That is equal to the number of
-    // vertices that a single mesh can have to be processed with the Mesh.draw() method
-    private val shortLimit = 32767
 
     fun mergeDataTo(verticesList: MutableList<Float>, faces: MutableList<Face>): Boolean {
         // The maxIdx at the moment is the number of vertices before the addition
@@ -16,7 +14,9 @@ data class MeshContainer(
         // more triangles to the same mesh, check if that would be possible. If, after the addition
         // of vertices, the maxIdx would be greater than the shot limit, do not add anything
         val thisVertices = this.vertexData.size / TOTAL_COMPONENT_COUNT
-        if (maxIdx + thisVertices > shortLimit) {
+        // The maximum number that a short data type can store is 32767. That is equal to the number of
+        // vertices that a single mesh can have to be processed with the Mesh.draw() method
+        if (maxIdx + thisVertices > MAX_SHORT_VALUE) {
             return false
         }
         // If the code reaches this part, it means that it is safe to merge data

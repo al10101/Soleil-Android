@@ -17,6 +17,7 @@ const val CONTROLS_TAG = "SoleilControlsTag"
 const val BYTES_PER_FLOAT = 4
 const val BYTES_PER_INT = 4
 const val BYTES_PER_SHORT = 2
+const val MAX_SHORT_VALUE = 32767
 
 // Units
 const val NANOSECONDS = 1_000_000_000f
